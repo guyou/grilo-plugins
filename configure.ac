@@ -1217,9 +1217,12 @@ AC_ARG_ENABLE([tmdb],
                [AS_IF([test "x$HAVE_JSON_GLIB" = "xno"],
                       [AC_MSG_ERROR([json-glib-1.0 not found, install it or use --disable-tmdb])
                       ])
+                AS_IF([test "x$HAVE_LIBSOUP" = "xno"],
+                      [AC_MSG_ERROR([libsoup needed, install it or use --disable-tmdb])
+                      ])
                ])],
         [
-         AS_IF([test "x$HAVE_JSON_GLIB" = "xyes"],
+         AS_IF([test "x$HAVE_JSON_GLIB" = "xyes" -a "x$HAVE_LIBSOUP" = "xyes"],
                [enable_tmdb=yes],
                [enable_tmdb=no])
         ]

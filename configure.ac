@@ -1288,6 +1288,43 @@ AC_SUBST(DEPS_FREEBOX_CFLAGS)
 DEPS_FREEBOX_LIBS="$DEPS_LIBS $GRLPLS_LIBS $AVAHI_LIBS"
 AC_SUBST(DEPS_FREEBOX_LIBS)
 
+
+# ----------------------------------------------------------
+# BUILD WEBOOB PLUGIN
+# ----------------------------------------------------------
+
+AC_ARG_ENABLE(weboob,
+        AC_HELP_STRING([--enable-weboob],
+                [enable Weboob plugin (default: auto)]),
+        [
+         AS_IF([test "x$enableval" = "xyes"],
+               [AS_IF([test "x$HAVE_JSON_GLIB" = "xno"],
+                      [AC_MSG_ERROR([json-glib-1.0 not found, install it or use --disable-weboob])
+                      ])
+               ])],
+        [
+         AS_IF([test "x$HAVE_JSON_GLIB" = "xyes"],
+               [enable_weboob=yes],
+               [enable_weboob=no])
+        ]
+)
+
+AM_CONDITIONAL([WEBOOB_PLUGIN], [test "x$enable_weboob" = "xyes"])
+GRL_PLUGINS_ALL="$GRL_PLUGINS_ALL weboob"
+if test "x$enable_weboob" = "xyes"
+then
+	GRL_PLUGINS_ENABLED="$GRL_PLUGINS_ENABLED weboob"
+fi
+
+WEBOOB_PLUGIN_ID="grl-weboob"
+AC_SUBST(WEBOOB_PLUGIN_ID)
+AC_DEFINE_UNQUOTED([WEBOOB_PLUGIN_ID], ["$WEBOOB_PLUGIN_ID"], [Weboob plugin ID])
+
+DEPS_WEBOOB_CFLAGS="$DEPS_CFLAGS $JSON_CFLAGS"
+AC_SUBST(DEPS_WEBOOB_CFLAGS)
+DEPS_WEBOOB_LIBS="$DEPS_LIBS $JSON_LIBS"
+AC_SUBST(DEPS_WEBOOB_LIBS)
+
 # ----------------------------------------------------------
 # GETTEXT/INTLTOOL
 # ----------------------------------------------------------
@@ -1347,6 +1384,7 @@ AC_CONFIG_FILES([
   src/tracker/Makefile
   src/upnp/Makefile
   src/vimeo/Makefile
+  src/weboob/Makefile
   src/youtube/Makefile
   tests/Makefile
   tests/apple-trailers/Makefile
@@ -1354,6 +1392,7 @@ AC_CONFIG_FILES([
   tests/local-metadata/Makefile
   tests/tmdb/Makefile
   tests/vimeo/Makefile
+  tests/weboob/Makefile
 ])
 
 AC_OUTPUT

@@ -29,6 +29,10 @@ if VIMEO_PLUGIN
 SUBDIRS += vimeo
 endif
 
+if WEBOOB_PLUGIN
+SUBDIRS += weboob
+endif
+
 DIST_SUBDIRS =    \
    apple-trailers \
    bliptv         \

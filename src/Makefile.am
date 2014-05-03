@@ -106,6 +106,10 @@ if FREEBOX_PLUGIN
 SUBDIRS += freebox
 endif
 
+if WEBOOB_PLUGIN
+SUBDIRS += weboob
+endif
+
 DIST_SUBDIRS = \
    apple-trailers bliptv bookmarks dmap filesystem flickr freebox gravatar jamendo \
    lastfm-albumart local-metadata lua-factory magnatune metadata-store optical-media   \

@@ -32,15 +32,53 @@
 #define VIDEOOB_COMMAND "videoob"
 
 static void
-videoob_run (gchar **argv,
+videoob_run (gchar *backend,
+             int count,
+             gchar **argv,
              GError **error)
 {
   gchar *output;
   gboolean ret;
   JsonParser *parser;
   gint exit_status;
+  gchar *args[64];
+  int i = 0;
+  int j = 0;
+  gchar scount[64];
 
-  ret = g_spawn_sync (NULL, argv, NULL,
+  /* Consolidate arguments */
+  args[i++] = VIDEOOB_COMMAND;
+
+  /* Backend */
+  if (NULL != backend) {
+    args[i++] = "-b";
+    args[i++] = backend;
+  }
+  
+  /* Result count */
+  if (-1 != count) {
+    args[i++] = "-n";
+    /* We use a raw char buffer in order to avoid allocating and
+     * deallocating memory for this conversion.
+     */
+    g_snprintf (scount, 64-1, "%d", count);
+    args[i++] = scount;
+  }
+
+  /* JSON format */
+  args[i++] = "-f";
+  args[i++] = "json";
+  
+  /* Copy remaining (and specific) args */
+  for (j=0 ; NULL != argv && NULL != argv[j] ; j++) {
+    args[i++] = argv[j];
+  }
+  
+  /* End of args */
+  args[i++] = NULL;
+
+  /* Spawn command */
+  ret = g_spawn_sync (NULL, args, NULL,
                       G_SPAWN_SEARCH_PATH,
                       NULL, NULL,
                       &output, NULL,
@@ -67,26 +105,18 @@ videoob_run (gchar **argv,
 
 void
 videoob_ls (gchar *backend,
+            int count,
             gchar *dir,
             GError **error)
 {
   gchar *args[64];
   int i = 0;
-
-  args[i++] = VIDEOOB_COMMAND;
-
-  /* Backend */
-  if (NULL != backend) {
-    args[i++] = "-b";
-    args[i++] = backend;
-  }
-  
-  /* JSON format */
-  args[i++] = "-f";
-  args[i++] = "json";
   
   args[i++] = "ls";
   args[i++] = dir;
 
-  videoob_run (args, error);
+  /* End of args */
+  args[i++] = NULL;
+
+  videoob_run (backend, count, args, error);
 }

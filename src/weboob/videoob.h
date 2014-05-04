@@ -21,6 +21,6 @@
 #ifndef _GRL_VIDEOOB_SOURCE_H_
 #define _GRL_VIDEOOB_SOURCE_H_
 
-void videoob_ls (gchar *backend, gchar *dir, GError **error);
+void videoob_ls (gchar *backend, int count, gchar *dir, GError **error);
 
 #endif /* _GRL_VIDEOOB_SOURCE_H_ */

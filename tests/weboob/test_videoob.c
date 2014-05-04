@@ -20,6 +20,8 @@
  *
  */
 
+/* To see debug messages: G_MESSAGES_DEBUG=all ./test_videoob */
+
 #include <grilo.h>
 
 #include <../../src/weboob/videoob.h>
@@ -30,9 +32,9 @@ main (int argc, char **argv)
   GError *error;
   error = NULL;
 
-  videoob_ls (NULL, "arte-latest", &error);
+  videoob_ls (NULL, -1, "arte-latest", &error);
 
-  videoob_ls (NULL, "latest", &error);
+  videoob_ls (NULL, 5, "latest", &error);
   
   if (error != NULL)
   {

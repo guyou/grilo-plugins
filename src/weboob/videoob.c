@@ -27,9 +27,111 @@
 
 #include <json-glib/json-glib.h>
 
+#include <grilo.h>
+
 #include "videoob.h"
 
 #define VIDEOOB_COMMAND "videoob"
+
+/* Result example:
+ * 
+ * "id": "3qVJLOK_zao@youtube"
+ * "title": "GNOME Shell 3.8 search redesign"
+ * "url": null
+ * "ext": null
+ * "author": "Cosimo Cecchi"
+ * "description": null
+ * "date": null
+ * "size": null
+ * "rating": null
+ * "rating_max": null
+ * "nsfw": false
+ * "thumbnail": {"id": "https://i.ytimg.com/vi/3qVJLOK_zao/0.jpg", "title": null, "url": "https://i.
+ytimg.com/vi/3qVJLOK_zao/0.jpg", "ext": null, "author": null, "description": null, "date": null, "si
+ze": null, "rating": null, "rating_max": null, "nsfw": false, "thumbnail": null, "data": null}
+ * "data": null
+ * "duration": "0:00:45"
+ */
+
+static gchar *
+videoob_node_get_string (JsonNode *node, const gchar *pattern)
+{
+  gchar * id = NULL;
+  JsonNode *matches;
+  JsonNode *match;
+  JsonArray *results;
+  gint len;
+  GError *error = NULL;
+  
+  matches = json_path_query (pattern, node, &error);
+
+  /* FIXME checks on matches */
+  results = json_node_get_array (matches);
+  len = json_array_get_length (results);  
+  g_debug ("Found %d result", len);
+  
+  match = json_array_get_element (results, 0);
+  id = json_node_dup_string (match);
+  
+  json_node_free (matches);
+  
+  return id;
+}
+
+static GrlMedia *
+build_media_from_node (GrlMedia *content, JsonNode *node)
+{
+  GrlMedia *media = NULL;
+  gchar *id;
+  gchar *title;
+  gchar *url;
+  gchar *desc;
+  gchar *date;
+
+  g_debug ("Parsing node %s", json_node_type_name (node));
+
+  if (content) {
+    media = content;
+  } else {
+    media = grl_media_video_new ();
+  }
+
+  id = videoob_node_get_string (node, "$.id");
+  g_debug ("Id: %s", id);
+  title = videoob_node_get_string (node, "$.title");
+  g_debug ("Title: %s", title);
+  url = videoob_node_get_string (node, "$.url");
+  g_debug ("Url: %s", url);
+  desc = videoob_node_get_string (node, "$.description");
+  g_debug ("Desc: %s", desc);
+  date = videoob_node_get_string (node, "$.date");
+  g_debug ("Date: %s", date);
+
+  grl_media_set_id (media, id);
+  grl_media_set_title (media, title);
+  if (url) {
+    grl_media_set_url (media, url);
+  }
+  if (desc) {
+    grl_media_set_description (media, desc);
+  }
+
+  if (date) {
+    GDateTime *date_time = grl_date_time_from_iso8601 (date);
+    if (date_time) {
+      grl_media_set_creation_date (media, date_time);
+      g_date_time_unref (date_time);
+    }
+  }
+
+  g_free (id);
+  g_free (title);
+  g_free (url);
+  g_free (desc);
+  g_free (date);
+  
+  return media;
+}
 
 static void
 videoob_run (gchar *backend,
@@ -101,6 +203,10 @@ videoob_run (gchar *backend,
   JsonArray *array = json_node_get_array (root);
   guint len = json_array_get_length (array);
   g_debug ("Length: %d", len);
+  for (i=0 ; i < len ; i++) {
+    JsonNode *node = json_array_get_element (array, i);
+    GrlMedia *media = build_media_from_node (NULL, node);
+  }
 }
 
 void

@@ -475,6 +475,8 @@ grl_weboob_source_browse (GrlSource *source,
   BuildCategorySpec *bcs;
   OperationSpec *os;
   const gchar *container_id;
+  GList *medias = NULL;
+  GError *error = NULL;
 
   GRL_DEBUG ("%s: %s (%u, %d)",
              __FUNCTION__,
@@ -496,7 +498,13 @@ grl_weboob_source_browse (GrlSource *source,
   os->user_data = bs->user_data;
   os->error_code = GRL_CORE_ERROR_BROWSE_FAILED;
 
-  /* FIXME */
+  medias = videoob_ls (NULL, os->count, "", &error);
+  
+  if (medias) {
+    operation_spec_set_medias (os, medias);
+  }
+  
+  operation_spec_unref (os);
 }
 
 static void

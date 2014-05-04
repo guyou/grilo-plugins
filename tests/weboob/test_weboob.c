@@ -204,6 +204,34 @@ test_cancel (void)
   g_object_unref (options);
 }
 
+static void
+test_browse_root (void)
+{
+  GError *error = NULL;
+  GList *medias;
+  GrlOperationOptions *options;
+  GrlRegistry *registry;
+  GrlSource *source;
+
+  registry = grl_registry_get_default ();
+  source = grl_registry_lookup_source (registry, WEBOOB_ID);
+  g_assert (source);
+  options = grl_operation_options_new (NULL);
+  grl_operation_options_set_count (options, 6);
+  g_assert (options);
+
+  medias = grl_source_browse_sync (source,
+                                   NULL,
+                                   grl_source_supported_keys (source),
+                                   options,
+                                   &error);
+
+  g_assert_cmpint (g_list_length(medias), ==, 6);
+  g_assert_no_error (error);
+
+  g_object_unref (options);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -219,6 +247,7 @@ main (int argc, char **argv)
 
   test_setup ();
 
+  g_test_add_func ("/weboob/browse/root", test_browse_root);
   g_test_add_func ("/weboob/search/normal", test_search_normal);
   g_test_add_func ("/weboob/search/null", test_search_null);
   //g_test_add_func ("/weboob/search/empty", test_search_empty);

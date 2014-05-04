@@ -45,6 +45,39 @@ parse_duration (const gchar *sduration)
   return hours*60*60 + minutes*60 + seconds;
 }
 
+static GrlMediaBox *
+build_media_box_from_entry (const char *line)
+{
+  GrlMedia *box;
+  gchar *id = NULL;
+  gchar *title = NULL;
+  gchar *ptr = NULL;
+  gint len = 0;
+  
+  box = grl_media_box_new ();
+  
+  /* parse line */
+  id = strchr (line, '(');
+  if (id) {
+    /* Id */
+    id = id + 1;
+    ptr = strchr (id, ')');
+    len = ptr - id;
+    id = g_strndup (id, len);
+    
+    /* Title */
+    title = g_strdup (ptr + 2);
+  }
+
+  grl_media_set_id (box, id);
+  grl_media_set_title (box, title);
+
+  g_free (id);
+  g_free (title);
+  
+  return box;
+}
+
 /* Result example:
  * 
  * "id": "3qVJLOK_zao@youtube"
@@ -160,20 +193,52 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
 }
 
 static GList *
+build_medias_from_json (const gchar *line, GError **error)
+{
+  GList *medias = NULL;
+  JsonParser *parser = NULL;
+  gboolean ret;
+  int i = 0;
+
+  parser = json_parser_new ();
+  ret = json_parser_load_from_data (parser,
+                              line, -1,
+                              error);
+
+  /* FIXME check ret */
+
+  JsonNode *root = json_parser_get_root (parser);
+  JsonArray *array = json_node_get_array (root);
+  guint len = json_array_get_length (array);
+  GRL_DEBUG ("Length: %d", len);
+  for (i=0 ; i < len ; i++) {
+    JsonNode *node = json_array_get_element (array, i);
+    GrlMedia *media = build_media_from_node (NULL, node);
+    medias = g_list_prepend (medias, media);
+  }
+  
+  return medias;
+}
+
+static GList *
 videoob_run (gchar *backend,
              int count,
              gchar **argv,
              GError **error)
 {
   GList *medias = NULL;
+  GList *news = NULL;
+  GrlMedia *media;
   gchar *output = NULL;
+  gchar *line = NULL;
   gboolean ret;
-  JsonParser *parser = NULL;
   gint exit_status;
   gchar *args[64];
   int i = 0;
   int j = 0;
   gchar scount[64];
+  GInputStream *is;
+  GDataInputStream *dis;
 
   /* Consolidate arguments */
   args[i++] = VIDEOOB_COMMAND;
@@ -234,21 +299,26 @@ videoob_run (gchar *backend,
     return NULL;
   }
 
-  parser = json_parser_new ();
-  ret = json_parser_load_from_data (parser,
-                              output, -1,
-                              error);
-
-  JsonNode *root = json_parser_get_root (parser);
-  JsonArray *array = json_node_get_array (root);
-  guint len = json_array_get_length (array);
-  g_debug ("Length: %d", len);
-  for (i=0 ; i < len ; i++) {
-    JsonNode *node = json_array_get_element (array, i);
-    GrlMedia *media = build_media_from_node (NULL, node);
-    medias = g_list_prepend (medias, media);
+  is = g_memory_input_stream_new_from_data (output, -1, NULL);
+  dis = g_data_input_stream_new (is);
+  line = g_data_input_stream_read_line (dis, NULL, NULL, error);
+  while (NULL != line && NULL == *error) {
+    if ('~' == line[0]) {
+      media = build_media_box_from_entry (line);
+      medias = g_list_prepend (medias, media);
+    } else if ('[' == line[0]) {
+      news = build_medias_from_json (line, error);
+      medias = g_list_concat (medias, news);
+      //g_free (news);
+    }
+    
+    /* next */
+    line = g_data_input_stream_read_line (dis, NULL, NULL, error);
   }
-  
+
+  //g_free (dis);
+  //g_free (is);
+
   return medias;
 }
 
@@ -270,18 +340,6 @@ videoob_ls (const gchar *backend,
   args[i++] = NULL;
 
   return videoob_run (backend, count, args, error);
-}
-
-static GrlMediaBox *
-build_media_box_from_entry (const gchar *line)
-{
-  GrlMediaBox *box;
-  
-  box = grl_media_box_new ();
-  
-  /* TODO parse line */
-  
-  return box;
 }
 
 GList *

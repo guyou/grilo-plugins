@@ -80,7 +80,7 @@ videoob_node_get_string (JsonNode *node, const gchar *pattern)
   /* FIXME checks on matches */
   results = json_node_get_array (matches);
   len = json_array_get_length (results);  
-  g_debug ("Found %d result", len);
+  GRL_DEBUG ("Found %d result", len);
   
   match = json_array_get_element (results, 0);
   id = json_node_dup_string (match);
@@ -102,7 +102,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   gchar *thumbnail;
   gchar *duration;
 
-  g_debug ("Parsing node %s", json_node_type_name (node));
+  GRL_DEBUG ("Parsing node %s", json_node_type_name (node));
 
   if (content) {
     media = content;
@@ -111,19 +111,19 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   }
 
   id = videoob_node_get_string (node, "$.id");
-  g_debug ("Id: %s", id);
+  GRL_DEBUG ("Id: %s", id);
   title = videoob_node_get_string (node, "$.title");
-  g_debug ("Title: %s", title);
+  GRL_DEBUG ("Title: %s", title);
   url = videoob_node_get_string (node, "$.url");
-  g_debug ("Url: %s", url);
+  GRL_DEBUG ("Url: %s", url);
   desc = videoob_node_get_string (node, "$.description");
-  g_debug ("Desc: %s", desc);
+  GRL_DEBUG ("Desc: %s", desc);
   date = videoob_node_get_string (node, "$.date");
-  g_debug ("Date: %s", date);
+  GRL_DEBUG ("Date: %s", date);
   thumbnail = videoob_node_get_string (node, "$.thumbnail.url");
-  g_debug ("Thumbnail URL: %s", thumbnail);
+  GRL_DEBUG ("Thumbnail URL: %s", thumbnail);
   duration = videoob_node_get_string (node, "$.duration");
-  g_debug ("Duration: %s", duration);
+  GRL_DEBUG ("Duration: %s", duration);
 
   grl_media_set_id (media, id);
   grl_media_set_title (media, title);
@@ -217,7 +217,7 @@ videoob_run (gchar *backend,
                       &exit_status,
                       error);
 
-  g_debug ("Exit status: %d", exit_status);
+  GRL_DEBUG ("Exit status: %d", exit_status);
   if (!ret)
   {
     g_error ("SPAWN FAILED");
@@ -225,7 +225,7 @@ videoob_run (gchar *backend,
   }
 
   if (0 != exit_status) {
-    g_debug ("Subprocess failure: %d", exit_status);
+    GRL_DEBUG ("Subprocess failure: %d", exit_status);
     /* FIXME error code */
     g_set_error (error,
                  GRL_CORE_ERROR,

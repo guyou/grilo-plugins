@@ -87,6 +87,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   gchar *url;
   gchar *desc;
   gchar *date;
+  gchar *thumbnail;
 
   g_debug ("Parsing node %s", json_node_type_name (node));
 
@@ -106,6 +107,8 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   g_debug ("Desc: %s", desc);
   date = videoob_node_get_string (node, "$.date");
   g_debug ("Date: %s", date);
+  thumbnail = videoob_node_get_string (node, "$.thumbnail.url");
+  g_debug ("Thumbnail URL: %s", date);
 
   grl_media_set_id (media, id);
   grl_media_set_title (media, title);
@@ -123,12 +126,16 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
       g_date_time_unref (date_time);
     }
   }
+  if (thumbnail) {
+    grl_media_add_thumbnail (media, thumbnail);
+  }
 
   g_free (id);
   g_free (title);
   g_free (url);
   g_free (desc);
   g_free (date);
+  g_free (thumbnail);
   
   return media;
 }

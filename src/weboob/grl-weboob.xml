@@ -1,10 +1,10 @@
 <plugin>
   <info>
-    <name>YouTube</name>
-    <module>libgrlyoutube</module>
-    <description>A plugin for browsing and searching YouTube videos</description>
-    <author>Igalia S.L.</author>
+    <name>Weboob</name>
+    <module>libgrlweboob</module>
+    <description>A plugin for using weboob tools</description>
+    <author>Guilhem Bonnefille</author>
     <license>LGPL</license>
-    <site>http://www.igalia.com</site>
+    <site>http://www.bonnefille.net</site>
   </info>
 </plugin>

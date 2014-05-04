@@ -178,6 +178,9 @@ videoob_run (gchar *backend,
   /* JSON format */
   args[i++] = "-f";
   args[i++] = "json";
+
+  /* Run quiet */
+  args[i++] = "-q";
   
   /* Copy remaining (and specific) args */
   for (j=0 ; NULL != argv && NULL != argv[j] ; j++) {

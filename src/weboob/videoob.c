@@ -270,3 +270,12 @@ videoob_search (gchar *backend,
 
   return videoob_run (backend, count, args, error);
 }
+
+GrlMedia *
+videoob_info (gchar *backend,
+              gchar *uri,
+              GError **error)
+{
+  /* TODO */
+  return NULL;
+}

@@ -34,6 +34,17 @@
 
 #define VIDEOOB_COMMAND "videoob"
 
+static gint
+parse_duration (const gchar *sduration)
+{
+  guint hours, minutes, seconds;
+
+  sscanf (sduration, "%u:%u:%u",
+          &hours, &minutes, &seconds);
+
+  return hours*60*60 + minutes*60 + seconds;
+}
+
 /* Result example:
  * 
  * "id": "3qVJLOK_zao@youtube"
@@ -89,6 +100,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   gchar *desc;
   gchar *date;
   gchar *thumbnail;
+  gchar *duration;
 
   g_debug ("Parsing node %s", json_node_type_name (node));
 
@@ -109,7 +121,9 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   date = videoob_node_get_string (node, "$.date");
   g_debug ("Date: %s", date);
   thumbnail = videoob_node_get_string (node, "$.thumbnail.url");
-  g_debug ("Thumbnail URL: %s", date);
+  g_debug ("Thumbnail URL: %s", thumbnail);
+  duration = videoob_node_get_string (node, "$.duration");
+  g_debug ("Duration: %s", duration);
 
   grl_media_set_id (media, id);
   grl_media_set_title (media, title);
@@ -130,6 +144,9 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   if (thumbnail) {
     grl_media_add_thumbnail (media, thumbnail);
   }
+  if (duration) {
+    grl_media_set_duration (media, parse_duration (duration));
+  }
 
   g_free (id);
   g_free (title);
@@ -137,6 +154,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   g_free (desc);
   g_free (date);
   g_free (thumbnail);
+  g_free (duration);
   
   return media;
 }

@@ -71,10 +71,16 @@ test_search_normal (void)
   media = g_list_nth_data (medias, 0);
 
   g_assert (GRL_IS_MEDIA_VIDEO (media));
+  g_assert_cmpint (grl_media_get_duration (media),
+                   >,
+                   0);
 
   media = g_list_nth_data (medias, 1);
 
   g_assert (GRL_IS_MEDIA_VIDEO (media));
+  g_assert_cmpint (grl_media_get_duration (media),
+                   >,
+                   0);
 
   g_list_free_full (medias, g_object_unref);
   g_object_unref (options);

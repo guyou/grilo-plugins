@@ -262,7 +262,9 @@ videoob_ls (const gchar *backend,
   int i = 0;
   
   args[i++] = "ls";
-  args[i++] = dir;
+  
+  if (NULL != dir)
+    args[i++] = dir;
 
   /* End of args */
   args[i++] = NULL;

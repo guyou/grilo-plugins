@@ -22,22 +22,36 @@
 
 /* To see debug messages: G_MESSAGES_DEBUG=all ./test_videoob */
 
+#include <stdio.h>
+
 #include <grilo.h>
 
 #include <../../src/weboob/videoob.h>
 
-int
-main (int argc, char **argv)
+void
+test_ls ()
 {
+  GList *medias;
   GError *error;
   error = NULL;
 
-  videoob_ls (NULL, -1, "arte-latest", &error);
+  medias = videoob_ls (NULL, -1, "arte-latest", &error);
+  printf ("ls: %d\n", g_list_length (medias));
 
-  videoob_ls (NULL, 5, "latest", &error);
+  medias = videoob_ls (NULL, 5, "latest", &error);
+  printf ("ls: %d\n", g_list_length (medias));
+  
+  medias = videoob_ls (NULL, 5, NULL, &error);
+  printf ("ls: %d\n", g_list_length (medias));
   
   if (error != NULL)
   {
     g_error("ls failed: %s", error->message);
   }
+}
+
+int
+main (int argc, char **argv)
+{
+  test_ls ();
 }

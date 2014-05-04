@@ -432,6 +432,17 @@ grl_weboob_source_search (GrlSource *source,
              grl_operation_options_get_skip (ss->options),
              grl_operation_options_get_count (ss->options));
 
+  if (!ss->text) {
+    /* Vimeo does not support searching all */
+    error = g_error_new (GRL_CORE_ERROR,
+                         GRL_CORE_ERROR_SEARCH_NULL_UNSUPPORTED,
+                         _("Failed to search: %s"),
+                         _("non-NULL search text is required"));
+    ss->callback (ss->source, ss->operation_id, NULL, 0, ss->user_data, error);
+    g_error_free (error);
+    return;
+  }
+
   os = operation_spec_new ();
   os->source = source;
   os->cancellable = g_cancellable_new ();

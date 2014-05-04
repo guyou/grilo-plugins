@@ -214,7 +214,7 @@ main (int argc, char **argv)
   test_setup ();
 
   g_test_add_func ("/weboob/search/normal", test_search_normal);
-  //g_test_add_func ("/weboob/search/null", test_search_null);
+  g_test_add_func ("/weboob/search/null", test_search_null);
   //g_test_add_func ("/weboob/search/empty", test_search_empty);
   g_test_add_func ("/weboob/cancel", test_cancel);
 

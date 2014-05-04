@@ -253,9 +253,9 @@ videoob_run (gchar *backend,
 }
 
 GList *
-videoob_ls (gchar *backend,
+videoob_ls (const gchar *backend,
             int count,
-            gchar *dir,
+            const gchar *dir,
             GError **error)
 {
   gchar *args[64];
@@ -283,9 +283,9 @@ build_media_box_from_entry (const gchar *line)
 }
 
 GList *
-videoob_search (gchar *backend,
+videoob_search (const gchar *backend,
                 int count,
-                gchar *pattern,
+                const gchar *pattern,
                 GError **error)
 {
   gchar *args[64];
@@ -301,8 +301,8 @@ videoob_search (gchar *backend,
 }
 
 GrlMedia *
-videoob_info (gchar *backend,
-              gchar *uri,
+videoob_info (const gchar *backend,
+              const gchar *uri,
               GError **error)
 {
   /* TODO */

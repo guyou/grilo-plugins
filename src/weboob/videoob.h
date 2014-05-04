@@ -21,10 +21,10 @@
 #ifndef _GRL_VIDEOOB_SOURCE_H_
 #define _GRL_VIDEOOB_SOURCE_H_
 
-GList *videoob_ls (gchar *backend, int count, gchar *dir, GError **error);
+GList *videoob_ls (const gchar *backend, int count, const gchar *dir, GError **error);
 
-GList *videoob_search (gchar *backend, int count, gchar *pattern, GError **error);
+GList *videoob_search (const gchar *backend, int count, const gchar *pattern, GError **error);
 
-GrlMedia *videoob_info (gchar *backend, gchar *uri, GError **error);
+GrlMedia *videoob_info (const gchar *backend, const gchar *uri, GError **error);
               
 #endif /* _GRL_VIDEOOB_SOURCE_H_ */

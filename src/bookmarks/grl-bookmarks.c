@@ -824,7 +824,9 @@ grl_bookmarks_source_search (GrlSource *source,
   os->callback = ss->callback;
   os->user_data = ss->user_data;
   os->error_code = GRL_CORE_ERROR_SEARCH_FAILED;
+
   produce_bookmarks_by_text (os, ss->text);
+
   g_slice_free (OperationSpec, os);
 }
 

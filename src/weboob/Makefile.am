@@ -31,6 +31,14 @@ extdir				= $(GRL_PLUGINS_DIR)
 weboobxmldir		= $(GRL_PLUGINS_DIR)
 weboobxml_DATA	= $(WEBOOB_PLUGIN_ID).xml
 
+# This lets us test the plugin without installing it,
+# because grilo expects the .so and .xml files to be in
+# the same directory:
+copy-xml-to-libs-dir: ${ext_LTLIBRARIES}
+	cp -f $(srcdir)/$(weboobxml_DATA) $(builddir)/.libs/
+
+all-local: copy-xml-to-libs-dir
+
 weboobresources.h: weboob.gresource.xml
 	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) $(srcdir)/weboob.gresource.xml \
 		--target=$@ --sourcedir=$(srcdir) --c-name _grl_weboob --generate-header

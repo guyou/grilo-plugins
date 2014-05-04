@@ -21,6 +21,8 @@
 #ifndef _GRL_VIDEOOB_SOURCE_H_
 #define _GRL_VIDEOOB_SOURCE_H_
 
-void videoob_ls (gchar *backend, int count, gchar *dir, GError **error);
+GList *videoob_ls (gchar *backend, int count, gchar *dir, GError **error);
+
+GList *videoob_search (gchar *backend, int count, gchar *pattern, GError **error);
 
 #endif /* _GRL_VIDEOOB_SOURCE_H_ */

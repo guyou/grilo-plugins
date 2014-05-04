@@ -23,9 +23,9 @@ libgrlweboob_la_LDFLAGS = \
 	-avoid-version
 
 libgrlweboob_la_SOURCES = \
+  grl-weboob.c grl-weboob.h \
   videoob.h videoob.c \
   weboobresources.h weboobresources.c
-#  grl-weboob.c grl-weboob.h 
 
 extdir				= $(GRL_PLUGINS_DIR)
 weboobxmldir		= $(GRL_PLUGINS_DIR)

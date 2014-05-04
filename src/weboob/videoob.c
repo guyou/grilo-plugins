@@ -133,12 +133,13 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   return media;
 }
 
-static void
+static GList *
 videoob_run (gchar *backend,
              int count,
              gchar **argv,
              GError **error)
 {
+  GList *medias = NULL;
   gchar *output;
   gboolean ret;
   JsonParser *parser;
@@ -206,10 +207,13 @@ videoob_run (gchar *backend,
   for (i=0 ; i < len ; i++) {
     JsonNode *node = json_array_get_element (array, i);
     GrlMedia *media = build_media_from_node (NULL, node);
+    medias = g_list_prepend (medias, media);
   }
+  
+  return medias;
 }
 
-void
+GList *
 videoob_ls (gchar *backend,
             int count,
             gchar *dir,
@@ -224,5 +228,35 @@ videoob_ls (gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  videoob_run (backend, count, args, error);
+  return videoob_run (backend, count, args, error);
+}
+
+static GrlMediaBox *
+build_media_box_from_entry (const gchar *line)
+{
+  GrlMediaBox *box;
+  
+  box = grl_media_box_new ();
+  
+  /* TODO parse line */
+  
+  return box;
+}
+
+GList *
+videoob_search (gchar *backend,
+                int count,
+                gchar *pattern,
+                GError **error)
+{
+  gchar *args[64];
+  int i = 0;
+  
+  args[i++] = "search";
+  args[i++] = pattern;
+
+  /* End of args */
+  args[i++] = NULL;
+
+  return videoob_run (backend, count, args, error);
 }

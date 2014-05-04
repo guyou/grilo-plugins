@@ -23,6 +23,7 @@
 #endif
 
 #include <glib.h>
+#include <glib/gi18n-lib.h>
 #include <glib/gprintf.h>
 
 #include <json-glib/json-glib.h>
@@ -147,9 +148,9 @@ videoob_run (gchar *backend,
              GError **error)
 {
   GList *medias = NULL;
-  gchar *output;
+  gchar *output = NULL;
   gboolean ret;
-  JsonParser *parser;
+  JsonParser *parser = NULL;
   gint exit_status;
   gchar *args[64];
   int i = 0;
@@ -199,10 +200,20 @@ videoob_run (gchar *backend,
                       error);
 
   g_debug ("Exit status: %d", exit_status);
-  if( ! ret )
+  if (!ret)
   {
-    g_error( "SPAWN FAILED" );
-    return;
+    g_error ("SPAWN FAILED");
+    return NULL;
+  }
+
+  if (0 != exit_status) {
+    g_debug ("Subprocess failure: %d", exit_status);
+    /* FIXME error code */
+    g_set_error (error,
+                 GRL_CORE_ERROR,
+                 GRL_CORE_ERROR_BROWSE_FAILED,
+                 _("Subprocess failure"));
+    return NULL;
   }
 
   parser = json_parser_new ();

@@ -1,0 +1,3 @@
+- render videoob operations async
+- add support for audio (http://weboob.org/applications/radioob)
+- add support for images (?)

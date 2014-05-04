@@ -20,7 +20,7 @@ test_videoob_SOURCES =	\
 	test_videoob.c
 
 test_videoob_LDADD =	\
-	@DEPS_LIBS@ -L$(abs_top_builddir)/src/weboob/.libs/ -lgrlweboob
+	@DEPS_LIBS@ $(abs_top_builddir)/src/weboob/.libs/libgrlweboob.la
 
 test_videoob_CFLAGS =	\
 	$(test_videoob_defines)

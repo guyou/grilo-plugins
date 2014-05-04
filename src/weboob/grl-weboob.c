@@ -448,7 +448,7 @@ grl_weboob_source_search (GrlSource *source,
 
   grl_operation_set_data (ss->operation_id, os->cancellable);
 
-  medias = videoob_search (NULL, -1, ss->text, &error);
+  medias = videoob_search (NULL, os->count, ss->text, &error);
   
   if (medias) {
     operatiion_spec_set_medias (os, medias);

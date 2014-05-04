@@ -345,7 +345,7 @@ operation_spec_ref (OperationSpec *os)
 }
 
 static void
-operatiion_spec_set_medias (OperationSpec *os, GList *medias)
+operation_spec_set_medias (OperationSpec *os, GList *medias)
 {
   GrlMedia *media;
   GList *iter;
@@ -462,7 +462,7 @@ grl_weboob_source_search (GrlSource *source,
   medias = videoob_search (NULL, os->count, ss->text, &error);
   
   if (medias) {
-    operatiion_spec_set_medias (os, medias);
+    operation_spec_set_medias (os, medias);
   }
   
   operation_spec_unref (os);

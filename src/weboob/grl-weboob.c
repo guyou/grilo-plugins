@@ -382,17 +382,14 @@ grl_weboob_source_supported_keys (GrlSource *source)
     keys = grl_metadata_key_list_new (GRL_METADATA_KEY_ID,
                                       GRL_METADATA_KEY_TITLE,
                                       GRL_METADATA_KEY_URL,
-                                      GRL_METADATA_KEY_EXTERNAL_URL,
                                       GRL_METADATA_KEY_DESCRIPTION,
                                       GRL_METADATA_KEY_DURATION,
                                       GRL_METADATA_KEY_PUBLICATION_DATE,
                                       GRL_METADATA_KEY_THUMBNAIL,
-                                      GRL_METADATA_KEY_MIME,
                                       GRL_METADATA_KEY_CHILDCOUNT,
                                       GRL_METADATA_KEY_SITE,
                                       GRL_METADATA_KEY_RATING,
-                                      GRL_METADATA_KEY_EXTERNAL_PLAYER,
-                                      NULL);
+                                      GRL_METADATA_KEY_INVALID);
   }
   return keys;
 }

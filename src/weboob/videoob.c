@@ -26,6 +26,8 @@
 #include <glib/gi18n-lib.h>
 #include <glib/gprintf.h>
 
+#include <gio/gio.h>
+
 #include <json-glib/json-glib.h>
 
 #include <grilo.h>
@@ -220,6 +222,22 @@ build_medias_from_json (const gchar *line, GError **error)
   return medias;
 }
 
+static void
+videoob_wait_cb (GObject      *source_object,
+                 GAsyncResult *res,
+                 gpointer      user_data)
+{
+  gboolean success = FALSE;
+
+  success = g_subprocess_wait_finish (G_SUBPROCESS (source_object), res, NULL);
+
+  if (success)
+    g_debug ("Process videoob terminated with success!");
+  else
+    g_debug ("Process videoob terminated with error!");
+
+}
+
 static GList *
 videoob_run (const gchar *backend,
              int count,
@@ -229,11 +247,9 @@ videoob_run (const gchar *backend,
   GList *medias = NULL;
   GList *news = NULL;
   GrlMedia *media;
-  gchar *output = NULL;
   gchar *line = NULL;
-  gboolean ret;
-  gint exit_status;
-  gchar *args[64];
+  GSubprocess *process;
+  const gchar *args[64];
   int i = 0;
   int j = 0;
   gchar scount[64];
@@ -275,31 +291,16 @@ videoob_run (const gchar *backend,
   args[i++] = NULL;
 
   /* Spawn command */
-  ret = g_spawn_sync (NULL, args, NULL,
-                      G_SPAWN_SEARCH_PATH,
-                      NULL, NULL,
-                      &output, NULL,
-                      &exit_status,
-                      error);
+  process = g_subprocess_newv (args, G_SUBPROCESS_FLAGS_STDOUT_PIPE, error);
 
-  GRL_DEBUG ("Exit status: %d", exit_status);
-  if (!ret)
+  if (!process)
   {
     g_error ("SPAWN FAILED");
     return NULL;
   }
 
-  if (0 != exit_status) {
-    GRL_DEBUG ("Subprocess failure: %d", exit_status);
-    /* FIXME error code */
-    g_set_error (error,
-                 GRL_CORE_ERROR,
-                 GRL_CORE_ERROR_BROWSE_FAILED,
-                 _("Subprocess failure"));
-    return NULL;
-  }
+  is = g_subprocess_get_stdout_pipe (process);
 
-  is = g_memory_input_stream_new_from_data (output, -1, NULL);
   dis = g_data_input_stream_new (is);
   line = g_data_input_stream_read_line (dis, NULL, NULL, error);
   while (NULL != line && NULL == *error) {

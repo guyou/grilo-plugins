@@ -133,6 +133,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   gchar *id;
   gchar *title;
   gchar *url;
+  gchar *author;
   gchar *desc;
   gchar *date;
   gchar *thumbnail;
@@ -146,6 +147,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
 
   id = videoob_node_get_string (node, "$.id");
   title = videoob_node_get_string (node, "$.title");
+  author = videoob_node_get_string (node, "$.author");
   url = videoob_node_get_string (node, "$.url");
   desc = videoob_node_get_string (node, "$.description");
   date = videoob_node_get_string (node, "$.date");
@@ -160,7 +162,9 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   if (desc) {
     grl_media_set_description (media, desc);
   }
-
+  if (author) {
+    grl_media_set_author (media, author);
+  }
   if (date) {
     GDateTime *date_time = grl_date_time_from_iso8601 (date);
     if (date_time) {
@@ -177,6 +181,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
 
   g_free (id);
   g_free (title);
+  g_free (author);
   g_free (url);
   g_free (desc);
   g_free (date);

@@ -32,6 +32,8 @@
 
 #include <grilo.h>
 
+#include "grl-weboob-shared.h"
+
 #include "videoob.h"
 
 #define VIDEOOB_COMMAND "videoob"

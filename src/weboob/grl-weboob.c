@@ -28,6 +28,7 @@
 
 #include "videoob.h"
 
+#include "grl-weboob-shared.h"
 #include "grl-weboob.h"
 
 enum {
@@ -41,8 +42,7 @@ enum {
 
 /* --------- Logging  -------- */
 
-#define GRL_LOG_DOMAIN_DEFAULT weboob_log_domain
-GRL_LOG_DOMAIN_STATIC(weboob_log_domain);
+GRL_LOG_DOMAIN (weboob_log_domain);
 
 /* ----- Root categories ---- */
 

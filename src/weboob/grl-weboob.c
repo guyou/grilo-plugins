@@ -503,24 +503,37 @@ static void
 grl_weboob_source_resolve (GrlSource *source,
                            GrlSourceResolveSpec *rs)
 {
-  BuildCategorySpec *bcs;
   const gchar *id;
-  GCancellable *cancellable;
+  GrlMedia *media;
   GError *error = NULL;
-  GrlMedia *media = NULL;
-
+  
   GRL_DEBUG (__FUNCTION__);
 
-  id = grl_media_get_id (rs->media);
-
-  /* FIXME */
-
-  if (error) {
-    rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, error);
-    g_error_free (error);
-  } else if (media) {
-    rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, NULL);
+  if (!rs->media || (id = grl_media_get_id (rs->media)) == NULL) {
+    goto send_unchanged;
   }
+
+  /* As all the keys are added always, except URL, the only case is missing URL */
+  if (g_list_find (rs->keys, GRLKEYID_TO_POINTER (GRL_METADATA_KEY_URL)) != NULL &&
+      grl_media_get_url (rs->media) == NULL) {
+
+    media = videoob_info (NULL, id, &error);
+    if (media) {
+      GRL_DEBUG ("%s: media url: %s", __FUNCTION__, grl_media_get_url (media));
+      grl_media_set_url (rs->media, grl_media_get_url (media));
+      g_object_unref (media);
+    }
+
+
+    rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, error);
+  } else {
+    goto send_unchanged;
+  }
+
+  return;
+
+ send_unchanged:
+  rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, NULL);
 }
 
 static gboolean

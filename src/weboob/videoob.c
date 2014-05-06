@@ -360,6 +360,22 @@ videoob_info (const gchar *backend,
               const gchar *uri,
               GError **error)
 {
-  /* TODO */
-  return NULL;
+  const gchar *args[64];
+  GList *medias;
+  int i = 0;
+  
+  args[i++] = "info";
+  
+  args[i++] = uri;
+
+  /* End of args */
+  args[i++] = NULL;
+
+  medias = videoob_run (backend, 1, args, error);
+  
+  if (NULL != medias && g_list_length (medias) > 0) {
+    return g_list_nth_data (medias, 0);
+  } else {
+    return NULL;
+  }
 }

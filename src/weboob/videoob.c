@@ -45,7 +45,7 @@ parse_duration (const gchar *sduration)
   return hours*60*60 + minutes*60 + seconds;
 }
 
-static GrlMediaBox *
+static GrlMedia *
 build_media_box_from_entry (const char *line)
 {
   GrlMedia *box;

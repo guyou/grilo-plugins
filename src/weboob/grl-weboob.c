@@ -168,7 +168,7 @@ grl_weboob_plugin_init (GrlRegistry *registry,
                         GrlPlugin *plugin,
                         GList *configs)
 {
-  gchar *format;
+  gchar *format = "HD";
   GrlConfig *config;
   gint config_count;
   GrlWeboobSource *source;
@@ -182,18 +182,16 @@ grl_weboob_plugin_init (GrlRegistry *registry,
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 
   if (!configs) {
-    GRL_INFO ("Configuration not provided! Plugin not loaded");
-    return FALSE;
+    GRL_INFO ("Configuration not provided! Will use default settings");
+  } else {
+    config_count = g_list_length (configs);
+    if (config_count > 1) {
+      GRL_INFO ("Provided %d configs, but will only use one", config_count);
+    }
+
+    config = GRL_CONFIG (configs->data);
+    format = grl_config_get_string (config, "format");
   }
-
-  config_count = g_list_length (configs);
-  if (config_count > 1) {
-    GRL_INFO ("Provided %d configs, but will only use one", config_count);
-  }
-
-  config = GRL_CONFIG (configs->data);
-  format = grl_config_get_string (config, "format");
-
 
   source = grl_weboob_source_new (format);
 

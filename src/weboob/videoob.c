@@ -221,9 +221,9 @@ build_medias_from_json (const gchar *line, GError **error)
 }
 
 static GList *
-videoob_run (gchar *backend,
+videoob_run (const gchar *backend,
              int count,
-             gchar **argv,
+             const gchar **argv,
              GError **error)
 {
   GList *medias = NULL;
@@ -328,7 +328,7 @@ videoob_ls (const gchar *backend,
             const gchar *dir,
             GError **error)
 {
-  gchar *args[64];
+  const gchar *args[64];
   int i = 0;
   
   args[i++] = "ls";
@@ -348,7 +348,7 @@ videoob_search (const gchar *backend,
                 const gchar *pattern,
                 GError **error)
 {
-  gchar *args[64];
+  const gchar *args[64];
   int i = 0;
   
   args[i++] = "search";

@@ -168,7 +168,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   if (date) {
     GDateTime *date_time = grl_date_time_from_iso8601 (date);
     if (date_time) {
-      grl_media_set_creation_date (media, date_time);
+      grl_media_set_publication_date (media, date_time);
       g_date_time_unref (date_time);
     }
   }

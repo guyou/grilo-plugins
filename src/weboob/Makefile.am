@@ -23,6 +23,7 @@ libgrlweboob_la_LDFLAGS = \
 	-avoid-version
 
 libgrlweboob_la_SOURCES = \
+  grl-weboob-shared.h \
   grl-weboob.c grl-weboob.h \
   videoob.h videoob.c \
   weboobresources.h weboobresources.c

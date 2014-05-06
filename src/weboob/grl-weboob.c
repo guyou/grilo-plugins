@@ -55,8 +55,6 @@ GRL_LOG_DOMAIN (weboob_log_domain);
 
 /* --- Other --- */
 
-#define _MAX_CHUNK       50
-
 /* --- Plugin information --- */
 
 #define PLUGIN_ID   WEBOOB_PLUGIN_ID
@@ -232,8 +230,7 @@ grl_weboob_source_new (const gchar *format)
                                             "source-id", SOURCE_ID,
                                             "source-name", SOURCE_NAME,
                                             "source-desc", SOURCE_DESC,
-                                            "auto-split-threshold",
-                                            _MAX_CHUNK,
+                                            "auto-split-threshold", 0,
                                             "supported-media", GRL_MEDIA_TYPE_VIDEO,
                                             "source-icon", icon,
                                             NULL));
@@ -416,7 +413,7 @@ grl_weboob_source_search (GrlSource *source,
                           GrlSourceSearchSpec *ss)
 {
   OperationSpec *os;
-  GList *medias;
+  GList *medias = NULL;
   GError *error = NULL;
   
   GRL_DEBUG ("%s (%u, %d)",
@@ -451,11 +448,14 @@ grl_weboob_source_search (GrlSource *source,
 
   grl_operation_set_data (ss->operation_id, os->cancellable);
 
-  medias = videoob_search (NULL, os->count, ss->text, &error);
-  
-  if (medias) {
-    operation_spec_set_medias (os, medias);
+
+  if (0 != grl_operation_options_get_skip (ss->options)) {
+    GRL_INFO ("Skip operation unsupported");
+  } else {
+    medias = videoob_search (NULL, os->count, ss->text, &error);
   }
+  
+  operation_spec_set_medias (os, medias);
   
   operation_spec_unref (os);
 }

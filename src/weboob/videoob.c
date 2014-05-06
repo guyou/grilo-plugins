@@ -117,7 +117,6 @@ videoob_node_get_string (JsonNode *node, const gchar *pattern)
   /* FIXME checks on matches */
   results = json_node_get_array (matches);
   len = json_array_get_length (results);  
-  GRL_DEBUG ("Found %d result", len);
   
   match = json_array_get_element (results, 0);
   id = json_node_dup_string (match);
@@ -139,8 +138,6 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   gchar *thumbnail;
   gchar *duration;
 
-  GRL_DEBUG ("Parsing node %s", json_node_type_name (node));
-
   if (content) {
     media = content;
   } else {
@@ -148,19 +145,12 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   }
 
   id = videoob_node_get_string (node, "$.id");
-  GRL_DEBUG ("Id: %s", id);
   title = videoob_node_get_string (node, "$.title");
-  GRL_DEBUG ("Title: %s", title);
   url = videoob_node_get_string (node, "$.url");
-  GRL_DEBUG ("Url: %s", url);
   desc = videoob_node_get_string (node, "$.description");
-  GRL_DEBUG ("Desc: %s", desc);
   date = videoob_node_get_string (node, "$.date");
-  GRL_DEBUG ("Date: %s", date);
   thumbnail = videoob_node_get_string (node, "$.thumbnail.url");
-  GRL_DEBUG ("Thumbnail URL: %s", thumbnail);
   duration = videoob_node_get_string (node, "$.duration");
-  GRL_DEBUG ("Duration: %s", duration);
 
   grl_media_set_id (media, id);
   grl_media_set_title (media, title);
@@ -257,6 +247,8 @@ videoob_run (const gchar *backend,
   gchar scount[64];
   GInputStream *is;
   GDataInputStream *dis;
+
+  GRL_DEBUG ("Running %s %s...", VIDEOOB_COMMAND, argv[0]);
 
   /* Consolidate arguments */
   args[i++] = VIDEOOB_COMMAND;

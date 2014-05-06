@@ -316,8 +316,8 @@ videoob_run (const gchar *backend,
     line = g_data_input_stream_read_line (dis, NULL, NULL, error);
   }
 
-  //g_free (dis);
-  //g_free (is);
+  g_object_unref (dis);
+  // no need g_free (is);
 
   return medias;
 }

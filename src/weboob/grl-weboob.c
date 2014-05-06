@@ -194,12 +194,6 @@ grl_weboob_plugin_init (GrlRegistry *registry,
   config = GRL_CONFIG (configs->data);
   format = grl_config_get_string (config, "format");
 
-#if !GLIB_CHECK_VERSION(2,32,0)
-  /* libgdata needs this */
-  if (!g_thread_supported()) {
-    g_thread_init (NULL);
-  }
-#endif
 
   source = grl_weboob_source_new (format);
 

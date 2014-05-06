@@ -299,9 +299,6 @@ grl_weboob_source_finalize (GObject *object)
 
 /* ======================= Utilities ==================== */
 
-// https://developer.gnome.org/json-glib/1.0/
-// https://developer.gnome.org/glib/stable/glib-Spawning-Processes.html#g-spawn-async-with-pipes
-
 static OperationSpec *
 operation_spec_new (void)
 {

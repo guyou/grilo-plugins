@@ -118,8 +118,10 @@ videoob_node_get_string (JsonNode *node, const gchar *pattern)
   results = json_node_get_array (matches);
   len = json_array_get_length (results);  
   
-  match = json_array_get_element (results, 0);
-  id = json_node_dup_string (match);
+  if (len > 0) {
+    match = json_array_get_element (results, 0);
+    id = json_node_dup_string (match);
+  }
   
   json_node_free (matches);
   

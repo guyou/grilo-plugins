@@ -484,7 +484,7 @@ grl_weboob_source_browse (GrlSource *source,
   os->user_data = bs->user_data;
   os->error_code = GRL_CORE_ERROR_BROWSE_FAILED;
 
-  medias = videoob_ls (NULL, os->count, "", &error);
+  medias = videoob_ls (NULL, os->count, container_id, &error);
   
   if (medias) {
     operation_spec_set_medias (os, medias);

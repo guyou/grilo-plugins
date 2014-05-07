@@ -333,6 +333,12 @@ videoob_ls (const gchar *backend,
   const gchar *args[64];
   int i = 0;
   
+  GRL_DEBUG ("%s ( %s, %d, %s )",
+             __FUNCTION__,
+             backend,
+             count,
+             dir);
+
   args[i++] = "ls";
   
   if (NULL != dir)
@@ -353,6 +359,12 @@ videoob_search (const gchar *backend,
   const gchar *args[64];
   int i = 0;
   
+  GRL_DEBUG ("%s ( %s, %d, %s )",
+             __FUNCTION__,
+             backend,
+             count,
+             pattern);
+  
   args[i++] = "search";
   args[i++] = pattern;
 
@@ -370,6 +382,11 @@ videoob_info (const gchar *backend,
   const gchar *args[64];
   GList *medias;
   int i = 0;
+  
+  GRL_DEBUG ("%s ( %s, %s )",
+             __FUNCTION__,
+             backend,
+             uri);
   
   args[i++] = "info";
   

@@ -10,7 +10,6 @@ include $(top_srcdir)/gtester.mk
 INCLUDES = @DEPS_CFLAGS@
 
 TEST_PROGS +=	\
-   test_videoob \
    test_weboob
 
 test_videoob_defines =                                              \

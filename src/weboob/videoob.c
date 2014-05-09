@@ -222,6 +222,102 @@ build_medias_from_json (const gchar *line, GError **error)
 }
 
 static void
+operation_spec_set_medias (OperationSpec *os, GList *medias)
+{
+  GrlMedia *media;
+  GList *iter;
+  gint count = 0;
+  
+  if (NULL != medias)
+    count = g_list_length (medias); 
+
+  if (count > 0) {
+    medias = g_list_reverse (medias);
+    iter = medias;
+    while (iter) {
+      media = GRL_MEDIA (iter->data);
+      os->callback (os->source,
+                    os->operation_id,
+                    media,
+                    --count,
+                    os->user_data,
+                    NULL);
+      iter = g_list_next (iter);
+    }
+    g_list_free (medias);
+  }
+}
+
+static void
+videoob_read_cb (GObject      *source_object,
+                 GAsyncResult *res,
+                 gpointer      user_data)
+{
+  GDataInputStream *dis = G_DATA_INPUT_STREAM (source_object);
+  OperationSpec *os = (OperationSpec*) user_data;
+  GList *medias = NULL;
+  GrlMedia *media;
+  gchar *line = NULL;
+  GError *error = NULL;
+
+  line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
+  if (NULL != line && NULL == error) {
+    if ('~' == line[0]) {
+      media = build_media_box_from_entry (line);
+      os->callback (os->source,
+                    os->operation_id,
+                    media,
+                    GRL_SOURCE_REMAINING_UNKNOWN,
+                    os->user_data,
+                    NULL);
+    } else if ('[' == line[0]) {
+      medias = build_medias_from_json (line, error);
+      operation_spec_set_medias (os, medias);
+      //g_list_free_full (medias, g_object_unref);
+    }
+    
+    /* next */
+    g_data_input_stream_read_line_async (dis, G_PRIORITY_DEFAULT,
+                                         os->cancellable,
+                                         videoob_read_cb,
+                                         os);
+  } else {
+    /* Nothing more */
+    g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
+    os->callback (os->source, os->operation_id, NULL, 0, os->user_data, error);
+  }
+
+}
+
+static void
+videoob_resolve_cb (GObject      *source_object,
+                    GAsyncResult *res,
+                    gpointer      user_data)
+{
+  GDataInputStream *dis = G_DATA_INPUT_STREAM (source_object);
+  GrlSourceResolveSpec *rs = (GrlSourceResolveSpec*) user_data;
+  GList *medias = NULL;
+  GrlMedia *media;
+  gchar *line = NULL;
+  GError *error = NULL;
+
+  line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
+  if (NULL != line && NULL == error) {
+    medias = build_medias_from_json (line, error);
+    if (NULL != medias && g_list_length (medias) > 0) {
+      media = g_list_nth_data (medias, 0);
+      /* Resolve Media */
+      GRL_DEBUG ("%s: media url: %s", __FUNCTION__, grl_media_get_url (media));
+      grl_media_set_url (rs->media, grl_media_get_url (media));
+    }
+    //g_list_free_full (medias, g_object_unref);
+  }
+
+  g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
+  rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, error);
+}
+
+static void
 videoob_wait_cb (GObject      *source_object,
                  GAsyncResult *res,
                  gpointer      user_data)
@@ -237,16 +333,15 @@ videoob_wait_cb (GObject      *source_object,
 
 }
 
-static GList *
+static void
 videoob_run (const gchar *backend,
              int count,
              const gchar **argv,
+             GCancellable *cancellable,
+             GAsyncReadyCallback *callback,
+             gpointer user_data,
              GError **error)
 {
-  GList *medias = NULL;
-  GList *news = NULL;
-  GrlMedia *media;
-  gchar *line = NULL;
   GSubprocess *process;
   const gchar *args[64];
   int i = 0;
@@ -297,37 +392,26 @@ videoob_run (const gchar *backend,
   if (!process)
   {
     g_error ("SPAWN FAILED");
-    return NULL;
+    return;
   }
 
   is = g_subprocess_get_stdout_pipe (process);
-
   dis = g_data_input_stream_new (is);
-  line = g_data_input_stream_read_line (dis, NULL, NULL, error);
-  while (NULL != line && NULL == *error) {
-    if ('~' == line[0]) {
-      media = build_media_box_from_entry (line);
-      medias = g_list_prepend (medias, media);
-    } else if ('[' == line[0]) {
-      news = build_medias_from_json (line, error);
-      medias = g_list_concat (medias, news);
-      //g_free (news);
-    }
-    
-    /* next */
-    line = g_data_input_stream_read_line (dis, NULL, NULL, error);
-  }
+
+  g_data_input_stream_read_line_async (dis, G_PRIORITY_DEFAULT,
+                                       cancellable,
+                                       callback,
+                                       user_data);
 
   g_object_unref (dis);
   // no need g_free (is);
-
-  return medias;
 }
 
-GList *
+void
 videoob_ls (const gchar *backend,
             int count,
             const gchar *dir,
+            OperationSpec *os,
             GError **error)
 {
   const gchar *args[64];
@@ -347,13 +431,15 @@ videoob_ls (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  return videoob_run (backend, count, args, error);
+  videoob_run (backend, count, args,
+               os->cancellable, videoob_read_cb, os, error);
 }
 
-GList *
+void
 videoob_search (const gchar *backend,
                 int count,
                 const gchar *pattern,
+                OperationSpec *os,
                 GError **error)
 {
   const gchar *args[64];
@@ -371,16 +457,17 @@ videoob_search (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  return videoob_run (backend, count, args, error);
+  videoob_run (backend, count, args, os->cancellable, videoob_read_cb, os, error);
 }
 
-GrlMedia *
+void
 videoob_info (const gchar *backend,
               const gchar *uri,
+              GCancellable *cancellable,
+              GrlSourceResolveSpec *rs,
               GError **error)
 {
   const gchar *args[64];
-  GList *medias;
   int i = 0;
   
   GRL_DEBUG ("%s ( %s, %s )",
@@ -395,11 +482,5 @@ videoob_info (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  medias = videoob_run (backend, 1, args, error);
-  
-  if (NULL != medias && g_list_length (medias) > 0) {
-    return g_list_nth_data (medias, 0);
-  } else {
-    return NULL;
-  }
+  videoob_run (backend, 1, args, cancellable, videoob_resolve_cb, rs, error);
 }

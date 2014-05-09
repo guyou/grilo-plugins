@@ -65,51 +65,12 @@ GRL_LOG_DOMAIN (weboob_log_domain);
 
 /* --- Data types --- */
 
-typedef void (*AsyncReadCbFunc) (gchar *data, gpointer user_data);
-
 typedef void (*BuildMediaFromEntryCbFunc) (GrlMedia *media, gpointer user_data);
-
-typedef struct {
-  gchar *id;
-  gchar *name;
-  guint count;
-} CategoryInfo;
-
-typedef struct {
-  GrlSource *source;
-  GCancellable *cancellable;
-  guint operation_id;
-  const gchar *container_id;
-  GList *keys;
-  GrlResolutionFlags flags;
-  guint skip;
-  guint count;
-  GrlSourceResultCb callback;
-  gpointer user_data;
-  guint error_code;
-  CategoryInfo *category_info;
-  guint emitted;
-  guint matches;
-  guint ref_count;
-} OperationSpec;
 
 typedef struct {
   GSourceFunc callback;
   gpointer user_data;
 } BuildCategorySpec;
-
-typedef struct {
-  AsyncReadCbFunc callback;
-  gchar *url;
-  gpointer user_data;
-} AsyncReadCb;
-
-typedef struct {
-  GrlMedia *media;
-  GCancellable *cancellable;
-  BuildMediaFromEntryCbFunc callback;
-  gpointer user_data;
-} SetMediaUrlAsyncReadCb;
 
 struct _GrlWeboobSourcePriv {
   gchar *format;
@@ -330,35 +291,6 @@ operation_spec_ref (OperationSpec *os)
   os->ref_count++;
 }
 
-static void
-operation_spec_set_medias (OperationSpec *os, GList *medias)
-{
-  GrlMedia *media;
-  GList *iter;
-  gint count = 0;
-  
-  if (NULL != medias)
-    count = g_list_length (medias); 
-
-  if (count > 0) {
-    medias = g_list_reverse (medias);
-    iter = medias;
-    while (iter) {
-      media = GRL_MEDIA (iter->data);
-      os->callback (os->source,
-                    os->operation_id,
-                    media,
-                    --count,
-                    os->user_data,
-                    NULL);
-      iter = g_list_next (iter);
-    }
-    g_list_free (medias);
-  } else {
-    os->callback (os->source, os->operation_id, NULL, 0, os->user_data, NULL);
-  }
-}
-
 /* ================== API Implementation ================ */
 
 static GrlSupportedOps
@@ -426,6 +358,12 @@ grl_weboob_source_search (GrlSource *source,
     return;
   }
 
+  if (0 != grl_operation_options_get_skip (ss->options)) {
+    GRL_INFO ("Skip operation unsupported");
+    ss->callback (ss->source, ss->operation_id, NULL, 0, ss->user_data, error);
+    return;
+  }
+
   os = operation_spec_new ();
   os->source = source;
   os->cancellable = g_cancellable_new ();
@@ -442,14 +380,7 @@ grl_weboob_source_search (GrlSource *source,
 
   grl_operation_set_data (ss->operation_id, os->cancellable);
 
-
-  if (0 != grl_operation_options_get_skip (ss->options)) {
-    GRL_INFO ("Skip operation unsupported");
-  } else {
-    medias = videoob_search (NULL, os->count, ss->text, &error);
-  }
-  
-  operation_spec_set_medias (os, medias);
+  videoob_search (NULL, os->count, ss->text, os, &error);
   
   operation_spec_unref (os);
 }
@@ -461,7 +392,6 @@ grl_weboob_source_browse (GrlSource *source,
   BuildCategorySpec *bcs;
   OperationSpec *os;
   const gchar *container_id;
-  GList *medias = NULL;
   GError *error = NULL;
 
   GRL_DEBUG ("%s: %s (%u, %d)",
@@ -474,6 +404,7 @@ grl_weboob_source_browse (GrlSource *source,
 
   os = operation_spec_new ();
   os->source = bs->source;
+  os->cancellable = g_cancellable_new ();
   os->operation_id = bs->operation_id;
   os->container_id = container_id;
   os->keys = bs->keys;
@@ -484,11 +415,12 @@ grl_weboob_source_browse (GrlSource *source,
   os->user_data = bs->user_data;
   os->error_code = GRL_CORE_ERROR_BROWSE_FAILED;
 
-  medias = videoob_ls (NULL, os->count, container_id, &error);
-  
-  if (medias) {
-    operation_spec_set_medias (os, medias);
-  }
+  /* Look for OPERATION_SPEC_REF_RATIONALE for details */
+  operation_spec_ref (os);
+
+  grl_operation_set_data (bs->operation_id, os->cancellable);
+
+  videoob_ls (NULL, os->count, container_id, os, &error);
   
   operation_spec_unref (os);
 }
@@ -498,7 +430,7 @@ grl_weboob_source_resolve (GrlSource *source,
                            GrlSourceResolveSpec *rs)
 {
   const gchar *id;
-  GrlMedia *media;
+  GCancellable *cancellable;
   GError *error = NULL;
   
   GRL_DEBUG (__FUNCTION__);
@@ -511,20 +443,14 @@ grl_weboob_source_resolve (GrlSource *source,
   if (g_list_find (rs->keys, GRLKEYID_TO_POINTER (GRL_METADATA_KEY_URL)) != NULL &&
       grl_media_get_url (rs->media) == NULL) {
 
-    media = videoob_info (NULL, id, &error);
-    if (media) {
-      GRL_DEBUG ("%s: media url: %s", __FUNCTION__, grl_media_get_url (media));
-      grl_media_set_url (rs->media, grl_media_get_url (media));
-      g_object_unref (media);
-    }
+    cancellable = g_cancellable_new ();
 
+    grl_operation_set_data (rs->operation_id, cancellable);
 
-    rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, error);
-  } else {
-    goto send_unchanged;
+    videoob_info (NULL, id, NULL, rs, &error);
+    
+    return;
   }
-
-  return;
 
  send_unchanged:
   rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, NULL);
@@ -571,7 +497,7 @@ grl_weboob_get_media_from_uri (GrlSource *source,
 
 static void
 grl_weboob_source_cancel (GrlSource *source,
-                           guint operation_id)
+                          guint operation_id)
 {
   GCancellable *cancellable;
 

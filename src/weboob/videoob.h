@@ -21,10 +21,12 @@
 #ifndef _GRL_VIDEOOB_SOURCE_H_
 #define _GRL_VIDEOOB_SOURCE_H_
 
-GList *videoob_ls (const gchar *backend, int count, const gchar *dir, GError **error);
+#include "grl-weboob-shared.h"
 
-GList *videoob_search (const gchar *backend, int count, const gchar *pattern, GError **error);
+void videoob_ls (const gchar *backend, int count, const gchar *dir, OperationSpec *os, GError **error);
 
-GrlMedia *videoob_info (const gchar *backend, const gchar *uri, GError **error);
+void videoob_search (const gchar *backend, int count, const gchar *pattern, OperationSpec *os, GError **error);
+
+void videoob_info (const gchar *backend, const gchar *uri, GCancellable *cancellable, GrlSourceResolveSpec *rs, GError **error);
               
 #endif /* _GRL_VIDEOOB_SOURCE_H_ */

@@ -447,7 +447,7 @@ grl_weboob_source_resolve (GrlSource *source,
 
     grl_operation_set_data (rs->operation_id, cancellable);
 
-    videoob_info (NULL, id, NULL, rs, &error);
+    videoob_info (NULL, id, cancellable, rs, &error);
     
     return;
   }

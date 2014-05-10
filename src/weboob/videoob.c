@@ -206,7 +206,10 @@ build_medias_from_json (const gchar *line, GError **error)
                               line, -1,
                               error);
 
-  /* FIXME check ret */
+  if (!ret) {
+    /* Error occured and 'error' already set */
+    return NULL;
+  }
 
   JsonNode *root = json_parser_get_root (parser);
   JsonArray *array = json_node_get_array (root);
@@ -271,7 +274,7 @@ videoob_read_cb (GObject      *source_object,
                     os->user_data,
                     NULL);
     } else if ('[' == line[0]) {
-      medias = build_medias_from_json (line, error);
+      medias = build_medias_from_json (line, &error);
       operation_spec_set_medias (os, medias);
       //g_list_free_full (medias, g_object_unref);
     }
@@ -303,7 +306,7 @@ videoob_resolve_cb (GObject      *source_object,
 
   line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
   if (NULL != line && NULL == error) {
-    medias = build_medias_from_json (line, error);
+    medias = build_medias_from_json (line, &error);
     if (NULL != medias && g_list_length (medias) > 0) {
       media = g_list_nth_data (medias, 0);
       /* Resolve Media */
@@ -338,7 +341,7 @@ videoob_run (const gchar *backend,
              int count,
              const gchar **argv,
              GCancellable *cancellable,
-             GAsyncReadyCallback *callback,
+             GAsyncReadyCallback callback,
              gpointer user_data,
              GError **error)
 {

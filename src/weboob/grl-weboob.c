@@ -339,7 +339,6 @@ grl_weboob_source_search (GrlSource *source,
                           GrlSourceSearchSpec *ss)
 {
   OperationSpec *os;
-  GList *medias = NULL;
   GError *error = NULL;
   
   GRL_DEBUG ("%s (%u, %d)",
@@ -389,7 +388,6 @@ static void
 grl_weboob_source_browse (GrlSource *source,
                           GrlSourceBrowseSpec *bs)
 {
-  BuildCategorySpec *bcs;
   OperationSpec *os;
   const gchar *container_id;
   GError *error = NULL;
@@ -460,7 +458,7 @@ static gboolean
 grl_weboob_test_media_from_uri (GrlSource *source, const gchar *uri)
 {
   // videoob info http://url
-  gboolean ok;
+  gboolean ok = TRUE;
 
   GRL_DEBUG (__FUNCTION__);
 
@@ -473,7 +471,7 @@ static void
 grl_weboob_get_media_from_uri (GrlSource *source,
                                GrlSourceMediaFromUriSpec *mfus)
 {
-  gchar *video_id;
+  gchar *video_id = NULL;
   GError *error;
   GCancellable *cancellable;
 

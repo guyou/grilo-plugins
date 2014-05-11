@@ -33,6 +33,7 @@
 
 enum {
   PROP_0,
+  PROP_BACKEND,
 };
 
 #define GRL_WEBOOB_SOURCE_GET_PRIVATE(object)          \
@@ -62,6 +63,7 @@ GRL_LOG_DOMAIN (weboob_log_domain);
 #define SOURCE_ID   "grl-weboob"
 #define SOURCE_NAME "Weboob"
 #define SOURCE_DESC _("A source for browsing and searching videos with weboob")
+#define SOURCE_NAME_FMT "Weboob for %s"
 
 /* --- Data types --- */
 
@@ -97,12 +99,14 @@ typedef struct {
 } OperationSpec;
 
 struct _GrlWeboobSourcePriv {
-  gchar *format;
+  gchar *backend;
 };
 
 #define WEBOOB_CLIENT_ID "grilo"
 
-static GrlWeboobSource *grl_weboob_source_new (const gchar *format);
+static GrlWeboobSource *grl_weboob_source_new_all (void);
+
+static GrlWeboobSource *grl_weboob_source_new_backend (const gchar *backend, const gchar *desc);
 
 static void grl_weboob_source_set_property (GObject *object,
                                             guint propid,
@@ -146,19 +150,40 @@ static GrlWeboobSource *ytsrc = NULL;
 
 /* =================== Weboob Plugin  =============== */
 
+static void
+add_backend (gpointer data,
+             gpointer user_data)
+{
+  gchar **backend = (gchar**) data;
+  GrlRegistry *registry = (GrlRegistry*) user_data;
+  GrlPlugin *plugin = NULL;
+  GrlWeboobSource *source;
+
+  plugin = grl_registry_lookup_plugin (registry, WEBOOB_PLUGIN_ID);
+
+  source = grl_weboob_source_new_backend (backend[0], backend[1]);
+
+  grl_registry_register_source (registry,
+                                plugin,
+                                GRL_SOURCE (source),
+                                NULL);
+}
+
 gboolean
 grl_weboob_plugin_init (GrlRegistry *registry,
                         GrlPlugin *plugin,
                         GList *configs)
 {
-  gchar *format = "HD";
+  gchar *type = "both";
   GrlConfig *config;
   gint config_count;
   GrlWeboobSource *source;
+  GList *backends;
+  GError *error = NULL;
 
   GRL_LOG_DOMAIN_INIT (weboob_log_domain, "weboob");
 
-  GRL_DEBUG ("weboob_plugin_init");
+  GRL_DEBUG (__FUNCTION__);
 
   /* Initialize i18n */
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -173,17 +198,34 @@ grl_weboob_plugin_init (GrlRegistry *registry,
     }
 
     config = GRL_CONFIG (configs->data);
-    format = grl_config_get_string (config, "format");
+    type = grl_config_get_string (config, "backends");
   }
 
-  source = grl_weboob_source_new (format);
+  backends = videoob_backends (&error);
+  if (backends != NULL) {
 
-  grl_registry_register_source (registry,
-                                plugin,
-                                GRL_SOURCE (source),
-                                NULL);
+    if (strcmp (type, "both") == 0 ||
+        strcmp (type, "all") == 0) {
+      /* A source for all */
+      source = grl_weboob_source_new_all ();
 
-  g_free (format);
+      grl_registry_register_source (registry,
+                                    plugin,
+                                    GRL_SOURCE (source),
+                                    NULL);
+    }
+
+    if (strcmp (type, "both") == 0 ||
+        strcmp (type, "backends") == 0) {
+      /* A source for each backend */
+      g_list_foreach (backends, add_backend, registry);
+    }
+    
+    g_list_free_full (backends, (GDestroyNotify)g_strfreev);
+  }
+  /* else videoob not present */
+
+  g_free (type);
 
   return TRUE;
 }
@@ -197,30 +239,67 @@ GRL_PLUGIN_REGISTER (grl_weboob_plugin_init,
 G_DEFINE_TYPE (GrlWeboobSource, grl_weboob_source, GRL_TYPE_SOURCE);
 
 static GrlWeboobSource *
-grl_weboob_source_new (const gchar *format)
+grl_weboob_source_new (const gchar *id,
+                       const gchar *name,
+                       const gchar *desc,
+                       const gchar *backend)
 {
   GrlWeboobSource *source;
   GIcon *icon;
   GFile *file;
 
-  GRL_DEBUG ("grl_weboob_source_new");
+  GRL_DEBUG ("%s ( %s, %s, %s, %s )",
+             __FUNCTION__, id, name, desc, backend);
 
   file = g_file_new_for_uri ("resource:///org/gnome/grilo/plugins/weboob/weboob.png");
   icon = g_file_icon_new (file);
   g_object_unref (file);
 
-  /* Use auto-split mode because YouTube fails for queries
-     that request more than YOUTUBE_MAX_CHUNK results */
   source = GRL_WEBOOB_SOURCE (g_object_new (GRL_WEBOOB_SOURCE_TYPE,
-                                            "source-id", SOURCE_ID,
-                                            "source-name", SOURCE_NAME,
-                                            "source-desc", SOURCE_DESC,
+                                            "source-id", id,
+                                            "source-name", name,
+                                            "source-desc", desc,
+                                            "weboob-backend", backend,
                                             "auto-split-threshold", 0,
                                             "supported-media", GRL_MEDIA_TYPE_VIDEO,
                                             "source-icon", icon,
                                             NULL));
 
   g_object_unref (icon);
+
+  return source;
+}
+
+static GrlWeboobSource *
+grl_weboob_source_new_all (void)
+{
+  GrlWeboobSource *source;
+
+  GRL_DEBUG (__FUNCTION__);
+
+  source = grl_weboob_source_new (SOURCE_ID, SOURCE_NAME, SOURCE_DESC, NULL);
+  
+  ytsrc = source;
+  g_object_add_weak_pointer (G_OBJECT (source), (gpointer *) &ytsrc);
+
+  return source;
+}
+
+static GrlWeboobSource *
+grl_weboob_source_new_backend (const gchar *backend, const gchar *desc)
+{
+  GrlWeboobSource *source;
+  gchar *id;
+  gchar *name;
+
+  GRL_DEBUG (__FUNCTION__);
+
+  id = g_strdup_printf ("%s-%s", SOURCE_ID, backend);
+  name = g_strdup_printf (SOURCE_NAME_FMT, backend),
+  source = grl_weboob_source_new (id, name, desc, backend);
+  g_free (id);
+  g_free (name);
+  
   ytsrc = source;
   g_object_add_weak_pointer (G_OBJECT (source), (gpointer *) &ytsrc);
 
@@ -247,6 +326,16 @@ grl_weboob_source_class_init (GrlWeboobSourceClass * klass)
   source_class->test_media_from_uri = grl_weboob_test_media_from_uri;
   source_class->media_from_uri = grl_weboob_get_media_from_uri;
 
+  g_object_class_install_property (gobject_class,
+                                   PROP_BACKEND,
+                                   g_param_spec_string ("weboob-backend",
+                                                        "weboob-backend",
+                                                        "Weboob backend identifier",
+                                                        NULL,
+                                                        G_PARAM_WRITABLE
+                                                        | G_PARAM_CONSTRUCT_ONLY
+                                                        | G_PARAM_STATIC_NAME));
+
   g_type_class_add_private (klass, sizeof (GrlWeboobSourcePriv));
 }
 
@@ -263,8 +352,14 @@ grl_weboob_source_set_property (GObject *object,
                                  GParamSpec *pspec)
 
 {
+  GrlWeboobSourcePriv *priv = GRL_WEBOOB_SOURCE_GET_PRIVATE (object);
+
   switch (propid) {
-    /* FIXME */
+    case PROP_BACKEND:
+      g_clear_pointer (&priv->backend, g_free);
+      priv->backend = g_strdup (g_value_get_string (value));
+      break;
+
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -277,7 +372,7 @@ grl_weboob_source_finalize (GObject *object)
 
   self = GRL_WEBOOB_SOURCE (object);
 
-  g_free (GRL_WEBOOB_SOURCE_GET_PRIVATE (self)->format);
+  g_free (GRL_WEBOOB_SOURCE_GET_PRIVATE (self)->backend);
 
   G_OBJECT_CLASS (grl_weboob_source_parent_class)->finalize (object);
 }
@@ -429,6 +524,7 @@ grl_weboob_source_search (GrlSource *source,
 {
   OperationSpec *os;
   GDataInputStream *dis;
+  gchar *backend;
   GError *error = NULL;
   
   GRL_DEBUG ("%s (%u, %d)",
@@ -469,7 +565,8 @@ grl_weboob_source_search (GrlSource *source,
 
   grl_operation_set_data (ss->operation_id, os->cancellable);
 
-  dis = videoob_search (NULL, os->count, ss->text, &error);
+  backend = GRL_WEBOOB_SOURCE_GET_PRIVATE (source)->backend;
+  dis = videoob_search (backend, os->count, ss->text, &error);
   videoob_read_async (dis, G_PRIORITY_DEFAULT,
                       os->cancellable,
                       result_cb,
@@ -486,6 +583,7 @@ grl_weboob_source_browse (GrlSource *source,
   OperationSpec *os;
   GDataInputStream *dis;
   const gchar *container_id;
+  gchar *backend;
   GError *error = NULL;
 
   GRL_DEBUG ("%s: %s (%u, %d)",
@@ -514,7 +612,8 @@ grl_weboob_source_browse (GrlSource *source,
 
   grl_operation_set_data (bs->operation_id, os->cancellable);
 
-  dis = videoob_ls (NULL, os->count, container_id, &error);
+  backend = GRL_WEBOOB_SOURCE_GET_PRIVATE (source)->backend;
+  dis = videoob_ls (backend, os->count, container_id, &error);
   videoob_read_async (dis, G_PRIORITY_DEFAULT,
                       os->cancellable,
                       result_cb,
@@ -567,6 +666,7 @@ grl_weboob_source_resolve (GrlSource *source,
   const gchar *id;
   GDataInputStream *dis;
   GCancellable *cancellable;
+  gchar *backend;
   GError *error = NULL;
   
   GRL_DEBUG (__FUNCTION__);
@@ -583,7 +683,8 @@ grl_weboob_source_resolve (GrlSource *source,
 
     grl_operation_set_data (rs->operation_id, cancellable);
 
-    dis = videoob_info (NULL, id, &error);
+    backend = GRL_WEBOOB_SOURCE_GET_PRIVATE (source)->backend;
+    dis = videoob_info (backend, id, &error);
     videoob_read_async (dis, G_PRIORITY_DEFAULT,
                         cancellable,
                         resolve_cb,

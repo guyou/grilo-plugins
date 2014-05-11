@@ -26,9 +26,10 @@
 
 #include <grilo.h>
 
+#include <../../src/weboob/grl-weboob-shared.h>
 #include <../../src/weboob/videoob.h>
 
-void
+static void
 test_ls ()
 {
   GList *medias;
@@ -50,8 +51,29 @@ test_ls ()
   }
 }
 
+static void
+dump_backend (gpointer data,
+              gpointer user_data)
+{
+  gchar **backend = (gchar**) data;
+  printf ("Backend: %s - %s\n", backend[0], backend[1]);
+}
+
+static void
+test_backends ()
+{
+  GList *backends;
+  GError *error;
+  error = NULL;
+  
+  backends = videoob_backends (&error);
+  printf ("%d backends\n", g_list_length (backends));
+  g_list_foreach (backends, dump_backend, NULL);
+}
+
 int
 main (int argc, char **argv)
 {
-  test_ls ();
+  /* test_ls (); */
+  test_backends ();
 }

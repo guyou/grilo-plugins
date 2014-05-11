@@ -422,3 +422,44 @@ videoob_info (const gchar *backend,
 
   return videoob_run (backend, 1, args, error);
 }
+
+GList *
+videoob_backends (GError **error)
+{
+  GList *backends = NULL;
+  GDataInputStream *dis;
+  gchar **backend = NULL;
+  const gchar *args[64];
+  int i = 0;
+  gchar *line;
+  
+  GRL_DEBUG ("%s ", __FUNCTION__);
+  
+  args[i++] = "backends";
+  
+  args[i++] = "list-modules";
+
+  /* End of args */
+  args[i++] = NULL;
+
+  dis = videoob_run (backend, 1, args, error);
+
+  if (dis != NULL) {
+    while ((line = g_data_input_stream_read_line (dis, NULL, NULL, error)) != NULL
+           && *error == NULL) {
+      if (line[0] == '[') {
+        if (line[1] == 'X' || g_ascii_isdigit (line[1])) {
+          /* Split line in two */
+          backend = g_strsplit (line + 4, " ", 2);
+          /* Remove leading spaces */
+          backend[1] = g_strchug (backend[1]);
+          /* Store result */
+          backends = g_list_append (backends, backend);
+        }
+      }
+      g_free (line);
+    }
+  }
+  
+  return backends;
+}

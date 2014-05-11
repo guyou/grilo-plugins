@@ -261,9 +261,19 @@ videoob_read_cb (GObject      *source_object,
   GList *medias = NULL;
   GrlMedia *media;
   gchar *line = NULL;
+  GCancellable *cancellable;
   GError *error = NULL;
+  
+  GRL_DEBUG ("%s", __FUNCTION__);
 
-  line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
+  cancellable = os->cancellable;
+
+  if (g_cancellable_is_cancelled (cancellable)) {
+    GRL_DEBUG ("%s: cancelled", __FUNCTION__);
+    /* Keep line as NULL to interrupt reading */
+  } else {
+    line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
+  }
   if (NULL != line && NULL == error) {
     if ('~' == line[0]) {
       media = build_media_box_from_entry (line);
@@ -287,8 +297,12 @@ videoob_read_cb (GObject      *source_object,
   } else {
     /* Nothing more */
     g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
-    os->callback (os->source, os->operation_id, NULL, 0, os->user_data, error);
-  }
+    if (!g_cancellable_is_cancelled (cancellable)) {
+      /* Once cancelled, os->operation_id is no more usable */
+      os->callback (os->source, os->operation_id, NULL, 0, os->user_data, error);
+    }
+    /* FIXME unref os */
+ }
 
 }
 
@@ -302,9 +316,20 @@ videoob_resolve_cb (GObject      *source_object,
   GList *medias = NULL;
   GrlMedia *media;
   gchar *line = NULL;
+  GCancellable *cancellable;
   GError *error = NULL;
-
-  line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
+  
+  GRL_DEBUG ("%s", __FUNCTION__);
+  
+  /* FIXME operation_id can be invalid as operation can be cancelled */
+  cancellable = grl_operation_get_data (rs->operation_id);
+  
+  if (g_cancellable_is_cancelled (cancellable)) {
+    GRL_DEBUG ("%s: cancelled", __FUNCTION__);
+    /* Keep line as NULL to interrupt reading */
+  } else {
+    line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
+  }
   if (NULL != line && NULL == error) {
     medias = build_medias_from_json (line, &error);
     if (NULL != medias && g_list_length (medias) > 0) {
@@ -317,7 +342,10 @@ videoob_resolve_cb (GObject      *source_object,
   }
 
   g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
-  rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, error);
+  if (!g_cancellable_is_cancelled (cancellable)) {
+    /* Once cancelled, os->operation_id is no more usable */
+    rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, error);
+  }
 }
 
 static void

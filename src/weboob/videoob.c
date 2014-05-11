@@ -221,6 +221,8 @@ build_medias_from_json (const gchar *line, GError **error)
     medias = g_list_prepend (medias, media);
   }
   
+  g_object_unref (parser);
+  
   return medias;
 }
 
@@ -247,7 +249,6 @@ operation_spec_set_medias (OperationSpec *os, GList *medias)
                     NULL);
       iter = g_list_next (iter);
     }
-    g_list_free (medias);
   }
 }
 
@@ -286,8 +287,10 @@ videoob_read_cb (GObject      *source_object,
     } else if ('[' == line[0]) {
       medias = build_medias_from_json (line, &error);
       operation_spec_set_medias (os, medias);
-      //g_list_free_full (medias, g_object_unref);
+      g_list_free (medias);
     }
+    
+    g_free (line);
     
     /* next */
     g_data_input_stream_read_line_async (dis, G_PRIORITY_DEFAULT,
@@ -302,7 +305,7 @@ videoob_read_cb (GObject      *source_object,
       os->callback (os->source, os->operation_id, NULL, 0, os->user_data, error);
     }
     /* FIXME unref os */
- }
+  }
 
 }
 
@@ -337,8 +340,10 @@ videoob_resolve_cb (GObject      *source_object,
       /* Resolve Media */
       GRL_DEBUG ("%s: media url: %s", __FUNCTION__, grl_media_get_url (media));
       grl_media_set_url (rs->media, grl_media_get_url (media));
+      g_object_ref (media);
     }
-    //g_list_free_full (medias, g_object_unref);
+    g_list_free_full (medias, g_object_unref);
+    g_free (line);
   }
 
   g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
@@ -435,7 +440,9 @@ videoob_run (const gchar *backend,
                                        user_data);
 
   g_object_unref (dis);
-  // no need g_free (is);
+  /* no need g_free (is); */
+  
+  g_object_unref (process);
 }
 
 void

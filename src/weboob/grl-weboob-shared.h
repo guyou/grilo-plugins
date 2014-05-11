@@ -30,30 +30,4 @@
 #define GRL_LOG_DOMAIN_DEFAULT weboob_log_domain
 GRL_LOG_DOMAIN_EXTERN (weboob_log_domain);
 
-/* --- Data types --- */
-
-typedef struct {
-  gchar *id;
-  gchar *name;
-  guint count;
-} CategoryInfo;
-
-typedef struct {
-  GrlSource *source;
-  GCancellable *cancellable;
-  guint operation_id;
-  const gchar *container_id;
-  GList *keys;
-  GrlResolutionFlags flags;
-  guint skip;
-  guint count;
-  GrlSourceResultCb callback;
-  gpointer user_data;
-  guint error_code;
-  CategoryInfo *category_info;
-  guint emitted;
-  guint matches;
-  guint ref_count;
-} OperationSpec;
-
 #endif /* _GRL_WEBOOB_SHARED_H_ */

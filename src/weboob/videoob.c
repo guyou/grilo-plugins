@@ -226,131 +226,45 @@ build_medias_from_json (const gchar *line, GError **error)
   return medias;
 }
 
-static void
-operation_spec_set_medias (OperationSpec *os, GList *medias)
+void
+videoob_read_async (GDataInputStream *dis,
+                    int io_priority,
+                    GCancellable *cancellable,
+                    GAsyncReadyCallback callback,
+                    gpointer user_data)
 {
-  GrlMedia *media;
-  GList *iter;
-  gint count = 0;
-  
-  if (NULL != medias)
-    count = g_list_length (medias); 
-
-  if (count > 0) {
-    medias = g_list_reverse (medias);
-    iter = medias;
-    while (iter) {
-      media = GRL_MEDIA (iter->data);
-      os->callback (os->source,
-                    os->operation_id,
-                    media,
-                    --count,
-                    os->user_data,
-                    NULL);
-      iter = g_list_next (iter);
-    }
-  }
+  g_data_input_stream_read_line_async (dis, G_PRIORITY_DEFAULT,
+                                       cancellable,
+                                       callback,
+                                       user_data);
 }
 
-static void
-videoob_read_cb (GObject      *source_object,
-                 GAsyncResult *res,
-                 gpointer      user_data)
+GList *
+videoob_read_finish (GDataInputStream *dis,
+                     GAsyncResult *res,
+                     GError **error)
 {
-  GDataInputStream *dis = G_DATA_INPUT_STREAM (source_object);
-  OperationSpec *os = (OperationSpec*) user_data;
   GList *medias = NULL;
   GrlMedia *media;
   gchar *line = NULL;
-  GCancellable *cancellable;
-  GError *error = NULL;
-  
-  GRL_DEBUG ("%s", __FUNCTION__);
 
-  cancellable = os->cancellable;
+  GRL_DEBUG ("%s: is closed %d", __FUNCTION__, g_input_stream_is_closed (dis));
 
-  if (g_cancellable_is_cancelled (cancellable)) {
-    GRL_DEBUG ("%s: cancelled", __FUNCTION__);
-    /* Keep line as NULL to interrupt reading */
-  } else {
-    line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
-  }
-  if (NULL != line && NULL == error) {
+  line = g_data_input_stream_read_line_finish (dis, res, NULL, error);
+  GRL_DEBUG ("%s: read %s", __FUNCTION__, line);
+
+  if (NULL != line && NULL == *error) {
     if ('~' == line[0]) {
       media = build_media_box_from_entry (line);
-      os->callback (os->source,
-                    os->operation_id,
-                    media,
-                    GRL_SOURCE_REMAINING_UNKNOWN,
-                    os->user_data,
-                    NULL);
+      medias = g_list_prepend (medias, media);
     } else if ('[' == line[0]) {
-      medias = build_medias_from_json (line, &error);
-      operation_spec_set_medias (os, medias);
-      g_list_free (medias);
+      medias = build_medias_from_json (line, error);
     }
-    
-    g_free (line);
-    
-    /* next */
-    g_data_input_stream_read_line_async (dis, G_PRIORITY_DEFAULT,
-                                         os->cancellable,
-                                         videoob_read_cb,
-                                         os);
-  } else {
-    /* Nothing more */
-    g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
-    if (!g_cancellable_is_cancelled (cancellable)) {
-      /* Once cancelled, os->operation_id is no more usable */
-      os->callback (os->source, os->operation_id, NULL, 0, os->user_data, error);
-    }
-    /* FIXME unref os */
   }
-
-}
-
-static void
-videoob_resolve_cb (GObject      *source_object,
-                    GAsyncResult *res,
-                    gpointer      user_data)
-{
-  GDataInputStream *dis = G_DATA_INPUT_STREAM (source_object);
-  GrlSourceResolveSpec *rs = (GrlSourceResolveSpec*) user_data;
-  GList *medias = NULL;
-  GrlMedia *media;
-  gchar *line = NULL;
-  GCancellable *cancellable;
-  GError *error = NULL;
   
-  GRL_DEBUG ("%s", __FUNCTION__);
+  g_free (line);
   
-  /* FIXME operation_id can be invalid as operation can be cancelled */
-  cancellable = grl_operation_get_data (rs->operation_id);
-  
-  if (g_cancellable_is_cancelled (cancellable)) {
-    GRL_DEBUG ("%s: cancelled", __FUNCTION__);
-    /* Keep line as NULL to interrupt reading */
-  } else {
-    line = g_data_input_stream_read_line_finish (dis, res, NULL, &error);
-  }
-  if (NULL != line && NULL == error) {
-    medias = build_medias_from_json (line, &error);
-    if (NULL != medias && g_list_length (medias) > 0) {
-      media = g_list_nth_data (medias, 0);
-      /* Resolve Media */
-      GRL_DEBUG ("%s: media url: %s", __FUNCTION__, grl_media_get_url (media));
-      grl_media_set_url (rs->media, grl_media_get_url (media));
-      g_object_ref (media);
-    }
-    g_list_free_full (medias, g_object_unref);
-    g_free (line);
-  }
-
-  g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
-  if (!g_cancellable_is_cancelled (cancellable)) {
-    /* Once cancelled, os->operation_id is no more usable */
-    rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, error);
-  }
+  return medias;
 }
 
 static void
@@ -369,13 +283,10 @@ videoob_wait_cb (GObject      *source_object,
 
 }
 
-static void
+static GDataInputStream *
 videoob_run (const gchar *backend,
              int count,
              const gchar **argv,
-             GCancellable *cancellable,
-             GAsyncReadyCallback callback,
-             gpointer user_data,
              GError **error)
 {
   GSubprocess *process;
@@ -428,28 +339,21 @@ videoob_run (const gchar *backend,
   if (!process)
   {
     g_error ("SPAWN FAILED");
-    return;
+    return NULL;
   }
 
   is = g_subprocess_get_stdout_pipe (process);
   dis = g_data_input_stream_new (is);
 
-  g_data_input_stream_read_line_async (dis, G_PRIORITY_DEFAULT,
-                                       cancellable,
-                                       callback,
-                                       user_data);
-
-  g_object_unref (dis);
-  /* no need g_free (is); */
-  
   g_object_unref (process);
+  
+  return dis;
 }
 
-void
+GDataInputStream *
 videoob_ls (const gchar *backend,
             int count,
             const gchar *dir,
-            OperationSpec *os,
             GError **error)
 {
   const gchar *args[64];
@@ -469,15 +373,13 @@ videoob_ls (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  videoob_run (backend, count, args,
-               os->cancellable, videoob_read_cb, os, error);
+  return videoob_run (backend, count, args, error);
 }
 
-void
+GDataInputStream *
 videoob_search (const gchar *backend,
                 int count,
                 const gchar *pattern,
-                OperationSpec *os,
                 GError **error)
 {
   const gchar *args[64];
@@ -495,14 +397,12 @@ videoob_search (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  videoob_run (backend, count, args, os->cancellable, videoob_read_cb, os, error);
+  return videoob_run (backend, count, args, error);
 }
 
-void
+GDataInputStream *
 videoob_info (const gchar *backend,
               const gchar *uri,
-              GCancellable *cancellable,
-              GrlSourceResolveSpec *rs,
               GError **error)
 {
   const gchar *args[64];
@@ -520,5 +420,5 @@ videoob_info (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  videoob_run (backend, 1, args, cancellable, videoob_resolve_cb, rs, error);
+  return videoob_run (backend, 1, args, error);
 }

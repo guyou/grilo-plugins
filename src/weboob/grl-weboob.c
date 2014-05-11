@@ -72,6 +72,30 @@ typedef struct {
   gpointer user_data;
 } BuildCategorySpec;
 
+typedef struct {
+  gchar *id;
+  gchar *name;
+  guint count;
+} CategoryInfo;
+
+typedef struct {
+  GrlSource *source;
+  GCancellable *cancellable;
+  guint operation_id;
+  const gchar *container_id;
+  GList *keys;
+  GrlResolutionFlags flags;
+  guint skip;
+  guint count;
+  GrlSourceResultCb callback;
+  gpointer user_data;
+  guint error_code;
+  CategoryInfo *category_info;
+  guint emitted;
+  guint matches;
+  guint ref_count;
+} OperationSpec;
+
 struct _GrlWeboobSourcePriv {
   gchar *format;
 };
@@ -291,6 +315,32 @@ operation_spec_ref (OperationSpec *os)
   os->ref_count++;
 }
 
+static void
+operation_spec_set_medias (OperationSpec *os, GList *medias)
+{
+  GrlMedia *media;
+  GList *iter;
+  gint count = 0;
+  
+  if (NULL != medias)
+    count = g_list_length (medias); 
+
+  if (count > 0) {
+    medias = g_list_reverse (medias);
+    iter = medias;
+    while (iter) {
+      media = GRL_MEDIA (iter->data);
+      os->callback (os->source,
+                    os->operation_id,
+                    media,
+                    GRL_SOURCE_REMAINING_UNKNOWN,
+                    os->user_data,
+                    NULL);
+      iter = g_list_next (iter);
+    }
+  }
+}
+
 /* ================== API Implementation ================ */
 
 static GrlSupportedOps
@@ -335,10 +385,50 @@ grl_weboob_source_slow_keys (GrlSource *source)
 }
 
 static void
+result_cb (GObject      *source_object,
+           GAsyncResult *res,
+           gpointer      user_data)
+{
+  GDataInputStream *dis = G_DATA_INPUT_STREAM (source_object);
+  OperationSpec *os = (OperationSpec*) user_data;
+  GList *medias = NULL;
+  GCancellable *cancellable;
+  GError *error = NULL;
+  
+  GRL_DEBUG ("%s", __FUNCTION__);
+
+  cancellable = os->cancellable;
+
+  if (g_cancellable_is_cancelled (cancellable)) {
+    GRL_DEBUG ("%s: cancelled", __FUNCTION__);
+    /* Keep line as NULL to interrupt reading */
+  } else {
+    medias = videoob_read_finish (dis, res, &error);
+  }
+  if (NULL != medias && NULL == error) {
+    operation_spec_set_medias (os, medias);
+    g_list_free (medias);
+    
+    /* next */
+    videoob_read_async (dis, G_PRIORITY_DEFAULT,
+                        os->cancellable,
+                        result_cb,
+                        os);
+  } else {
+    /* Nothing more */
+    g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
+    os->callback (os->source, os->operation_id, NULL, 0, os->user_data, error);
+    
+    operation_spec_unref (os);
+  }
+}
+
+static void
 grl_weboob_source_search (GrlSource *source,
                           GrlSourceSearchSpec *ss)
 {
   OperationSpec *os;
+  GDataInputStream *dis;
   GError *error = NULL;
   
   GRL_DEBUG ("%s (%u, %d)",
@@ -379,8 +469,13 @@ grl_weboob_source_search (GrlSource *source,
 
   grl_operation_set_data (ss->operation_id, os->cancellable);
 
-  videoob_search (NULL, os->count, ss->text, os, &error);
-  
+  dis = videoob_search (NULL, os->count, ss->text, &error);
+  videoob_read_async (dis, G_PRIORITY_DEFAULT,
+                      os->cancellable,
+                      result_cb,
+                      os);
+  g_object_unref (dis);
+
   operation_spec_unref (os);
 }
 
@@ -389,6 +484,7 @@ grl_weboob_source_browse (GrlSource *source,
                           GrlSourceBrowseSpec *bs)
 {
   OperationSpec *os;
+  GDataInputStream *dis;
   const gchar *container_id;
   GError *error = NULL;
 
@@ -418,9 +514,50 @@ grl_weboob_source_browse (GrlSource *source,
 
   grl_operation_set_data (bs->operation_id, os->cancellable);
 
-  videoob_ls (NULL, os->count, container_id, os, &error);
-  
+  dis = videoob_ls (NULL, os->count, container_id, &error);
+  videoob_read_async (dis, G_PRIORITY_DEFAULT,
+                      os->cancellable,
+                      result_cb,
+                      os);
+  g_object_unref (dis);
+
   operation_spec_unref (os);
+}
+
+static void
+resolve_cb (GObject      *source_object,
+            GAsyncResult *res,
+            gpointer      user_data)
+{
+  GDataInputStream *dis = G_DATA_INPUT_STREAM (source_object);
+  GrlSourceResolveSpec *rs = (GrlSourceResolveSpec*) user_data;
+  GList *medias = NULL;
+  GrlMedia *media;
+  GCancellable *cancellable;
+  GError *error = NULL;
+  
+  GRL_DEBUG ("%s", __FUNCTION__);
+  
+  /* FIXME operation_id can be invalid as operation can be cancelled */
+  cancellable = grl_operation_get_data (rs->operation_id);
+  
+  if (g_cancellable_is_cancelled (cancellable)) {
+    GRL_DEBUG ("%s: cancelled", __FUNCTION__);
+    /* Keep line as NULL to interrupt reading */
+  } else {
+    medias = videoob_read_finish (dis, res, &error);
+  }
+  if (NULL != medias && NULL == error && g_list_length (medias) > 0) {
+    media = g_list_nth_data (medias, 0);
+    /* Resolve Media */
+    GRL_DEBUG ("%s: media url: %s", __FUNCTION__, grl_media_get_url (media));
+    grl_media_set_url (rs->media, grl_media_get_url (media));
+    g_object_ref (media);
+  }
+  g_list_free_full (medias, g_object_unref);
+
+  g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
+  rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, error);
 }
 
 static void
@@ -428,6 +565,7 @@ grl_weboob_source_resolve (GrlSource *source,
                            GrlSourceResolveSpec *rs)
 {
   const gchar *id;
+  GDataInputStream *dis;
   GCancellable *cancellable;
   GError *error = NULL;
   
@@ -445,8 +583,13 @@ grl_weboob_source_resolve (GrlSource *source,
 
     grl_operation_set_data (rs->operation_id, cancellable);
 
-    videoob_info (NULL, id, cancellable, rs, &error);
-    
+    dis = videoob_info (NULL, id, &error);
+    videoob_read_async (dis, G_PRIORITY_DEFAULT,
+                        cancellable,
+                        resolve_cb,
+                        rs);
+    g_object_unref (dis);
+
     return;
   }
 

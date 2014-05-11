@@ -21,12 +21,22 @@
 #ifndef _GRL_VIDEOOB_SOURCE_H_
 #define _GRL_VIDEOOB_SOURCE_H_
 
-#include "grl-weboob-shared.h"
+#include <gio/gio.h>
 
-void videoob_ls (const gchar *backend, int count, const gchar *dir, OperationSpec *os, GError **error);
+GDataInputStream *videoob_ls (const gchar *backend, int count, const gchar *dir, GError **error);
 
-void videoob_search (const gchar *backend, int count, const gchar *pattern, OperationSpec *os, GError **error);
+GDataInputStream *videoob_search (const gchar *backend, int count, const gchar *pattern, GError **error);
 
-void videoob_info (const gchar *backend, const gchar *uri, GCancellable *cancellable, GrlSourceResolveSpec *rs, GError **error);
-              
+GDataInputStream *videoob_info (const gchar *backend, const gchar *uri, GError **error);
+
+void videoob_read_async (GDataInputStream *dis,
+                         int io_priority,
+                         GCancellable *cancellable,
+                         GAsyncReadyCallback callback,
+                         gpointer user_data);
+
+GList *videoob_read_finish (GDataInputStream *dis,
+                            GAsyncResult *res,
+                            GError **error);
+
 #endif /* _GRL_VIDEOOB_SOURCE_H_ */

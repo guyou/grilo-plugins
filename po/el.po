@@ -8,16 +8,16 @@ msgstr ""
 "Project-Id-Version: grilo-plugins master\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/enter_bug.cgi?product=grilo-"
 "plugins&keywords=I18N+L10N&component=general\n"
-"POT-Creation-Date: 2013-11-07 09:11+0000\n"
-"PO-Revision-Date: 2013-11-17 22:26+0300\n"
-"Last-Translator: Dimitris Spingos (Δημήτρης Σπίγγος) <dmtrs32@gmail.com>\n"
+"POT-Creation-Date: 2014-08-08 23:56+0000\n"
+"PO-Revision-Date: 2014-08-12 01:12+0200\n"
+"Last-Translator: Tom Tryfonidis <tomtryf@gmail.com>\n"
 "Language-Team: team@gnome.gr\n"
 "Language: el\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Virtaal 0.7.1\n"
+"X-Generator: Poedit 1.6.5\n"
 "X-Project-Style: gnome\n"
 
 #: ../src/apple-trailers/grl-apple-trailers.c:55
@@ -28,22 +28,22 @@ msgstr "Προσεχείς ταινίες Apple"
 msgid "A plugin for browsing Apple Movie Trailers"
 msgstr "Ένα πρόσθετο για περιήγηση προσεχών ταινιών Apple"
 
-#: ../src/apple-trailers/grl-apple-trailers.c:456
-#: ../src/jamendo/grl-jamendo.c:336 ../src/jamendo/grl-jamendo.c:696
-#: ../src/shoutcast/grl-shoutcast.c:416 ../src/shoutcast/grl-shoutcast.c:472
+#: ../src/apple-trailers/grl-apple-trailers.c:468
+#: ../src/jamendo/grl-jamendo.c:333 ../src/jamendo/grl-jamendo.c:694
+#: ../src/shoutcast/grl-shoutcast.c:405 ../src/shoutcast/grl-shoutcast.c:459
 msgid "Failed to parse response"
 msgstr "Αποτυχία ανάλυσης απόκρισης"
 
-#: ../src/apple-trailers/grl-apple-trailers.c:464
-#: ../src/jamendo/grl-jamendo.c:344 ../src/jamendo/grl-jamendo.c:351
-#: ../src/podcasts/grl-podcasts.c:1360 ../src/shoutcast/grl-shoutcast.c:424
+#: ../src/apple-trailers/grl-apple-trailers.c:476
+#: ../src/jamendo/grl-jamendo.c:341 ../src/jamendo/grl-jamendo.c:348
+#: ../src/podcasts/grl-podcasts.c:1353 ../src/shoutcast/grl-shoutcast.c:413
 msgid "Empty response"
 msgstr "Κενή απόκριση"
 
-#: ../src/apple-trailers/grl-apple-trailers.c:523
-#: ../src/jamendo/grl-jamendo.c:666
-#: ../src/lastfm-albumart/grl-lastfm-albumart.c:251
-#: ../src/shoutcast/grl-shoutcast.c:565
+#: ../src/apple-trailers/grl-apple-trailers.c:531
+#: ../src/jamendo/grl-jamendo.c:663
+#: ../src/lastfm-albumart/grl-lastfm-albumart.c:247
+#: ../src/shoutcast/grl-shoutcast.c:547
 #, c-format
 msgid "Failed to connect: %s"
 msgstr "Αποτυχία σύνδεσης: %s"
@@ -52,63 +52,105 @@ msgstr "Αποτυχία σύνδεσης: %s"
 msgid "A source for browsing and searching Blip.tv videos"
 msgstr "Μια πηγή για περιήγηση και αναζήτηση βίντεο Blip.tv"
 
-#: ../src/bookmarks/grl-bookmarks.c:119
+#: ../src/bookmarks/grl-bookmarks.c:67
 msgid "Bookmarks"
 msgstr "Σελιδοδείκτες"
 
-#: ../src/bookmarks/grl-bookmarks.c:120
+#: ../src/bookmarks/grl-bookmarks.c:68
 msgid "A source for organizing media bookmarks"
-msgstr "Μια πηγή για οργάνωση σελιδοδεικτών μέσων"
+msgstr "Μια πηγή για οργάνωση σελιδοδεικτών των πολυμέσων"
 
-#: ../src/bookmarks/grl-bookmarks.c:441 ../src/bookmarks/grl-bookmarks.c:456
+#: ../src/bookmarks/grl-bookmarks.c:421
 msgid "Failed to get bookmark metadata"
 msgstr "Αποτυχία λήψης μεταδεδομένων σελιδοδείκτη"
 
-#: ../src/bookmarks/grl-bookmarks.c:486 ../src/bookmarks/grl-bookmarks.c:506
+#: ../src/bookmarks/grl-bookmarks.c:451 ../src/bookmarks/grl-bookmarks.c:468
 #, c-format
-msgid "Failed to get bookmarks list: %s"
-msgstr "Αποτυχία λήψης λίστας σελιδοδεικτών: %s"
+msgid "Failed to find bookmarks: %s"
+msgstr "Αποτυχία εύρεσης σελιδοδεικτών: %s"
 
-#: ../src/bookmarks/grl-bookmarks.c:592 ../src/podcasts/grl-podcasts.c:817
-#: ../src/podcasts/grl-podcasts.c:849 ../src/podcasts/grl-podcasts.c:881
+#: ../src/bookmarks/grl-bookmarks.c:621 ../src/podcasts/grl-podcasts.c:813
+#: ../src/podcasts/grl-podcasts.c:845 ../src/podcasts/grl-podcasts.c:877
 #, c-format
 msgid "Failed to remove: %s"
 msgstr "Αποτυχία διαγραφής του: %s"
 
-#: ../src/bookmarks/grl-bookmarks.c:660 ../src/bookmarks/grl-bookmarks.c:718
-#: ../src/podcasts/grl-podcasts.c:922 ../src/podcasts/grl-podcasts.c:955
-#: ../src/podcasts/grl-podcasts.c:1804
+#: ../src/bookmarks/grl-bookmarks.c:732 ../src/podcasts/grl-podcasts.c:918
+#: ../src/podcasts/grl-podcasts.c:951 ../src/podcasts/grl-podcasts.c:1796
 #, c-format
 msgid "Failed to store: %s"
 msgstr "Αποτυχία αποθήκευσης του: %s"
 
-#: ../src/bookmarks/grl-bookmarks.c:772 ../src/bookmarks/grl-bookmarks.c:807
-#: ../src/bookmarks/grl-bookmarks.c:839 ../src/bookmarks/grl-bookmarks.c:901
-#: ../src/metadata-store/grl-metadata-store.c:852
-#: ../src/podcasts/grl-podcasts.c:1660 ../src/podcasts/grl-podcasts.c:1704
-#: ../src/podcasts/grl-podcasts.c:1738 ../src/podcasts/grl-podcasts.c:1773
+#: ../src/bookmarks/grl-bookmarks.c:806 ../src/bookmarks/grl-bookmarks.c:841
+#: ../src/bookmarks/grl-bookmarks.c:872 ../src/bookmarks/grl-bookmarks.c:930
+#: ../src/metadata-store/grl-metadata-store.c:849
+#: ../src/podcasts/grl-podcasts.c:1652 ../src/podcasts/grl-podcasts.c:1696
+#: ../src/podcasts/grl-podcasts.c:1730 ../src/podcasts/grl-podcasts.c:1765
 msgid "No database connection"
 msgstr "Χωρίς σύνδεση βάσης δεδομένων"
+
+#: ../src/dleyna/grl-dleyna-source.c:34
+#, c-format
+msgid "A source for browsing the DLNA server '%s'"
+msgstr "Μια πηγή για περιήγηση του διακομιστή DMAP '%s'"
+
+#: ../src/dleyna/grl-dleyna-source.c:278
+msgid "Upload failed, target source destroyed"
+msgstr "Αποτυχία αποστολής, καταστράφηκε η πηγή προορισμού"
+
+#: ../src/dleyna/grl-dleyna-source.c:380
+#, c-format
+msgid "Upload failed, '%s', transferred %lu of %lu bytes"
+msgstr "Αποτυχία αποστολής, '%s', μεταφέρθηκαν %lu από %lu bytes"
+
+#: ../src/dleyna/grl-dleyna-source.c:880
+#, c-format
+msgid "Failed to retrieve item properties (BrowseObjects error %d: %s)"
+msgstr ""
+"Αποτυχία ανάκτησης ιδιοτήτων αντικειμένου (Σφάλμα BrowseObjects %d: %s)"
+
+#: ../src/dleyna/grl-dleyna-source.c:1519
+#, c-format
+msgid "Upload failed, URL missing on the media object to be transferred"
+msgstr ""
+"Αποτυχία αποστολής, λείπει η διεύθυνση του αντικειμένου πολυμέσων που "
+"πρόκειται να μεταφερθεί"
 
 #: ../src/dmap/grl-dmap.c:51
 #, c-format
 msgid "A source for browsing the DMAP server '%s'"
-msgstr "Μια πηγή για περιήγηση του εξυπηρετητή DMAP '%s'"
+msgstr "Μια πηγή για περιήγηση του διακομιστή DMAP '%s'"
 
-#: ../src/filesystem/grl-filesystem.c:77
+#: ../src/dmap/simple-dmap-db.c:62 ../src/jamendo/grl-jamendo.c:781
+#: ../src/magnatune/grl-magnatune.c:121
+msgid "Albums"
+msgstr "Άλμπουμ"
+
+#: ../src/dmap/simple-dmap-db.c:64 ../src/jamendo/grl-jamendo.c:770
+#: ../src/magnatune/grl-magnatune.c:120
+msgid "Artists"
+msgstr "Καλλιτέχνες"
+
+#: ../src/dmap/simple-dmap-db.c:293 ../src/jamendo/grl-jamendo.c:1108
+#: ../src/jamendo/grl-jamendo.c:1183 ../src/magnatune/grl-magnatune.c:829
+#, c-format
+msgid "Invalid container identifier %s"
+msgstr "Άκυρο αναγνωριστικό περιέκτη %s"
+
+#: ../src/filesystem/grl-filesystem.c:60
 msgid "Filesystem"
 msgstr "Σύστημα αρχείων"
 
-#: ../src/filesystem/grl-filesystem.c:78
+#: ../src/filesystem/grl-filesystem.c:61
 msgid "A source for browsing the filesystem"
 msgstr "Μια πηγή για περιήγηση του συστήματος αρχείων"
 
-#: ../src/filesystem/grl-filesystem.c:1343
+#: ../src/filesystem/grl-filesystem.c:1148
 #, c-format
 msgid "File %s does not exist"
 msgstr "Το αρχείο %s δεν υπάρχει"
 
-#: ../src/filesystem/grl-filesystem.c:1420 ../src/youtube/grl-youtube.c:1624
+#: ../src/filesystem/grl-filesystem.c:1226 ../src/youtube/grl-youtube.c:1626
 #, c-format
 msgid "Cannot get media from %s"
 msgstr "Αδύνατη η λήψη μέσων από το %s"
@@ -129,13 +171,22 @@ msgstr "Το Flickr του %s"
 msgid "A source for browsing and searching %s's flickr photos"
 msgstr "Μια πηγή περιήγησης και αναζήτησης φωτογραφιών flickr του %s"
 
+#: ../src/freebox/grl-freebox.c:49
+msgid "Freebox TV"
+msgstr "Freebox TV"
+
+#: ../src/freebox/grl-freebox.c:50
+msgid "A source for browsing Freebox TV channels"
+msgstr "Μια πηγή για περιήγηση τηλεοπτικών καναλιών Freebox"
+
 #: ../src/gravatar/grl-gravatar.c:48
 msgid "Avatar provider from Gravatar"
-msgstr "Ο πάροχος εικόνας από το Gravatar"
+msgstr "Ο πάροχος προσωπικής εικόνας από το Gravatar"
 
 #: ../src/gravatar/grl-gravatar.c:49
 msgid "A plugin to get avatars for artist and author fields"
-msgstr "Ένα πρόσθετο λήψης εικόνων για πεδία καλλιτέχνη και συντάκτη"
+msgstr ""
+"Ένα πρόσθετο λήψης προσωπικών εικόνων για πεδία καλλιτέχνη και συντάκτη"
 
 #: ../src/jamendo/grl-jamendo.c:93
 msgid "A source for browsing and searching Jamendo music"
@@ -143,7 +194,7 @@ msgstr "Μια πηγή περιήγησης και αναζήτησης μου�
 
 #: ../src/jamendo/grl-jamendo.c:149
 msgid "Albums of the week"
-msgstr "Δίσκοι της εβδομάδας"
+msgstr "Άλμπουμ της εβδομάδας"
 
 #: ../src/jamendo/grl-jamendo.c:151
 msgid "Tracks of the week"
@@ -159,84 +210,70 @@ msgstr "Κορυφαίοι καλλιτέχνες"
 
 #: ../src/jamendo/grl-jamendo.c:157
 msgid "Top albums"
-msgstr "Κορυφαίοι δίσκοι"
+msgstr "Κορυφαία άλμπουμ"
 
 #: ../src/jamendo/grl-jamendo.c:159
 msgid "Top tracks"
 msgstr "Κορυφαία κομμάτια"
 
-#: ../src/jamendo/grl-jamendo.c:774 ../src/magnatune/grl-magnatune.c:120
-msgid "Artists"
-msgstr "Καλλιτέχνες"
-
-#: ../src/jamendo/grl-jamendo.c:785 ../src/magnatune/grl-magnatune.c:121
-msgid "Albums"
-msgstr "Δίσκοι"
-
-#: ../src/jamendo/grl-jamendo.c:796
+#: ../src/jamendo/grl-jamendo.c:792
 msgid "Feeds"
 msgstr "Τροφοδοσίες"
 
-#: ../src/jamendo/grl-jamendo.c:982 ../src/jamendo/grl-jamendo.c:1027
-#: ../src/jamendo/grl-jamendo.c:1054
+#: ../src/jamendo/grl-jamendo.c:976 ../src/jamendo/grl-jamendo.c:1021
+#: ../src/jamendo/grl-jamendo.c:1048
 #, c-format
 msgid "Invalid identifier %s"
 msgstr "Άκυρος ταυτοποιητής %s"
 
-#: ../src/jamendo/grl-jamendo.c:1041 ../src/youtube/grl-youtube.c:1188
-#: ../src/youtube/grl-youtube.c:1331 ../src/youtube/grl-youtube.c:1551
+#: ../src/jamendo/grl-jamendo.c:1035 ../src/youtube/grl-youtube.c:1194
+#: ../src/youtube/grl-youtube.c:1335 ../src/youtube/grl-youtube.c:1553
 #, c-format
 msgid "Invalid category identifier %s"
 msgstr "Άκυρος ταυτοποιητής κατηγορίας %s"
 
-#: ../src/jamendo/grl-jamendo.c:1116 ../src/jamendo/grl-jamendo.c:1191
-#: ../src/magnatune/grl-magnatune.c:829
-#, c-format
-msgid "Invalid container identifier %s"
-msgstr "Άκυρος ταυτοποιητής περιέκτη %s"
-
-#: ../src/jamendo/grl-jamendo.c:1186
+#: ../src/jamendo/grl-jamendo.c:1178
 #, c-format
 msgid "Failed to browse: %s is a track"
 msgstr "Αποτυχία περιήγησης: το %s είναι ένα κομμάτι"
 
-#: ../src/jamendo/grl-jamendo.c:1248
+#: ../src/jamendo/grl-jamendo.c:1238
 #, c-format
 msgid "Malformed query \"%s\""
 msgstr "Κακοσχηματισμένο ερώτημα \"%s\""
 
 #: ../src/lastfm-albumart/grl-lastfm-albumart.c:60
 msgid "Album art Provider from Last.FM"
-msgstr "Πάροχος καλλιτεχνικού δίσκου από Last.FM"
+msgstr "Πάροχος καλλιτεχνικού άλμπουμ από Last.FM"
 
 #: ../src/lastfm-albumart/grl-lastfm-albumart.c:61
 msgid "A plugin for getting album arts using Last.FM as backend"
 msgstr ""
-"Ένα πρόσθετο για λήψη καλλιτεχνικών δίσκων χρησιμοποιώντας Last.FM ως "
+"Ένα πρόσθετο για λήψη καλλιτεχνικών άλμπουμ χρησιμοποιώντας Last.FM ως "
 "υποστήριξη"
 
-#: ../src/local-metadata/grl-local-metadata.c:42
+#: ../src/local-metadata/grl-local-metadata.c:44
 msgid "Local Metadata Provider"
 msgstr "Τοπικός πάροχος μεταδεδομένων"
 
-#: ../src/local-metadata/grl-local-metadata.c:43
+#: ../src/local-metadata/grl-local-metadata.c:45
 msgid "A source providing locally available metadata"
 msgstr "Μια πηγή που παρέχει τοπικά διαθέσιμα μεταδεδομένα"
 
-#: ../src/local-metadata/grl-local-metadata.c:481
-#: ../src/metadata-store/grl-metadata-store.c:760 ../src/raitv/grl-raitv.c:864
-#: ../src/tracker/grl-tracker-source-api.c:460
+#: ../src/local-metadata/grl-local-metadata.c:486
+#: ../src/metadata-store/grl-metadata-store.c:759 ../src/raitv/grl-raitv.c:861
+#: ../src/tracker/grl-tracker-source-api.c:489
 #, c-format
 msgid "Failed to resolve: %s"
 msgstr "Αποτυχία επίλυσης του: %s"
 
-#: ../src/local-metadata/grl-local-metadata.c:1014
+#: ../src/local-metadata/grl-local-metadata.c:868
 msgid "Cannot resolve any of the given keys"
 msgstr "Αδύνατη η επίλυση οποιουδήποτε από τα δεδομένα κλειδιά"
 
-#: ../src/local-metadata/grl-local-metadata.c:1018
+#: ../src/local-metadata/grl-local-metadata.c:872
 msgid "A GIO supported URL for images is required"
-msgstr "Απαιτείται ένα υποστηριζόμενο URL από το GIO για εικόνες"
+msgstr "Απαιτείται μια υποστηριζόμενη διεύθυνση από το GIO για εικόνες"
 
 #: ../src/magnatune/grl-magnatune.c:122
 msgid "Genres"
@@ -274,34 +311,34 @@ msgstr "Αποθήκευση μεταδεδομένων"
 msgid "A plugin for storing extra metadata information"
 msgstr "Ένα πρόσθετο για αποθήκευση πρόσθετων πληροφοριών μεταδεδομένων"
 
-#: ../src/metadata-store/grl-metadata-store.c:574
-#: ../src/metadata-store/grl-metadata-store.c:593
-#: ../src/metadata-store/grl-metadata-store.c:805
-#: ../src/tracker/grl-tracker-source-api.c:511
+#: ../src/metadata-store/grl-metadata-store.c:573
+#: ../src/metadata-store/grl-metadata-store.c:592
+#: ../src/metadata-store/grl-metadata-store.c:804
+#: ../src/tracker/grl-tracker-source-api.c:597
 #, c-format
 msgid "Failed to update metadata: %s"
 msgstr "Αποτυχία ενημέρωσης μεταδεδομένων του: %s"
 
-#: ../src/metadata-store/grl-metadata-store.c:575
+#: ../src/metadata-store/grl-metadata-store.c:574
 msgid "specified keys are not writable"
 msgstr "τα συγκεκριμένα κλειδιά δεν είναι εγγράψιμα"
 
-#: ../src/metadata-store/grl-metadata-store.c:615
+#: ../src/metadata-store/grl-metadata-store.c:614
 msgid "Failed to update metadata"
 msgstr "Αποτυχία ενημέρωσης μεταδεδομένων"
 
-#: ../src/metadata-store/grl-metadata-store.c:761
-#: ../src/metadata-store/grl-metadata-store.c:806
+#: ../src/metadata-store/grl-metadata-store.c:760
+#: ../src/metadata-store/grl-metadata-store.c:805
 msgid "\"source-id\" not available"
 msgstr "δεν είναι διαθέσιμο το \"πηγαίο αναγνωριστικό\""
 
-#: ../src/metadata-store/grl-metadata-store.c:781 ../src/upnp/grl-upnp.c:1433
+#: ../src/metadata-store/grl-metadata-store.c:780
 msgid "Failed to resolve"
 msgstr "Αποτυχία επίλυσης"
 
-#: ../src/metadata-store/grl-metadata-store.c:920
-#: ../src/metadata-store/grl-metadata-store.c:957 ../src/raitv/grl-raitv.c:415
-#: ../src/shoutcast/grl-shoutcast.c:759 ../src/vimeo/grl-vimeo.c:525
+#: ../src/metadata-store/grl-metadata-store.c:917
+#: ../src/metadata-store/grl-metadata-store.c:954 ../src/raitv/grl-raitv.c:419
+#: ../src/shoutcast/grl-shoutcast.c:745 ../src/vimeo/grl-vimeo.c:541
 #, c-format
 msgid "Failed to search: %s"
 msgstr "Αποτυχία αναζήτησης του: %s"
@@ -314,48 +351,56 @@ msgstr "Οπτικά μέσα"
 msgid "A source for browsing optical media"
 msgstr "Μια πηγή για περιήγηση οπτικών μέσων"
 
+#: ../src/pocket/grl-pocket.c:47
+msgid "Pocket"
+msgstr "Pocket"
+
+#: ../src/pocket/grl-pocket.c:48
+msgid "A source for browsing Pocket videos"
+msgstr "Μια πηγή για περιήγηση βίντεο Pocket"
+
 #: ../src/podcasts/grl-podcasts.c:155
 msgid "A source for browsing podcasts"
-msgstr "Μια πηγή για περιήγηση δικτυομεταδόσεων"
+msgstr "Μια πηγή για περιήγηση φορητών εκπομπών"
 
-#: ../src/podcasts/grl-podcasts.c:753 ../src/podcasts/grl-podcasts.c:773
+#: ../src/podcasts/grl-podcasts.c:749 ../src/podcasts/grl-podcasts.c:769
 #, c-format
 msgid "Failed to get podcast streams: %s"
-msgstr "Αποτυχία λήψης ροών δικτυομετάδοσης: %s"
+msgstr "Αποτυχία λήψης ροών φορητών εκπομπών: %s"
 
-#: ../src/podcasts/grl-podcasts.c:1239 ../src/podcasts/grl-podcasts.c:1248
-#: ../src/podcasts/grl-podcasts.c:1258
+#: ../src/podcasts/grl-podcasts.c:1235 ../src/podcasts/grl-podcasts.c:1244
+#: ../src/podcasts/grl-podcasts.c:1254
 msgid "Failed to parse content"
 msgstr "Αποτυχία ανάλυσης περιεχομένου"
 
-#: ../src/podcasts/grl-podcasts.c:1291
+#: ../src/podcasts/grl-podcasts.c:1287
 msgid "Failed to parse podcast contents"
-msgstr "Αποτυχία ανάλυσης περιεχομένων δικτυομετάδοσης"
+msgstr "Αποτυχία ανάλυσης περιεχομένων φορητών εκπομπών"
 
-#: ../src/podcasts/grl-podcasts.c:1449
+#: ../src/podcasts/grl-podcasts.c:1442
 msgid "Failed to get podcast information"
-msgstr "Αποτυχία λήψης πληροφοριών δικτυομετάδοσης"
+msgstr "Αποτυχία λήψης πληροφοριών φορητών εκπομπών"
 
-#: ../src/podcasts/grl-podcasts.c:1489 ../src/podcasts/grl-podcasts.c:1509
+#: ../src/podcasts/grl-podcasts.c:1482 ../src/podcasts/grl-podcasts.c:1502
 #, c-format
 msgid "Failed to get podcasts list: %s"
-msgstr "Αποτυχία λήψης λίστας δικτυομεταδόσεων: %s"
+msgstr "Αποτυχία λήψης λίστας φορητών εκπομπών: %s"
 
-#: ../src/podcasts/grl-podcasts.c:1563 ../src/podcasts/grl-podcasts.c:1578
+#: ../src/podcasts/grl-podcasts.c:1555 ../src/podcasts/grl-podcasts.c:1570
 msgid "Failed to get podcast stream metadata"
-msgstr "Αποτυχία λήψης μεταδεδομένων ροών δικτυομετάδοσης"
+msgstr "Αποτυχία λήψης μεταδεδομένων ροών φορητών εκπομπών"
 
-#: ../src/podcasts/grl-podcasts.c:1616
+#: ../src/podcasts/grl-podcasts.c:1608
 msgid "Failed to get podcast metadata"
-msgstr "Αποτυχία λήψης μεταδεδομένων δικτυομετάδοσης"
+msgstr "Αποτυχία λήψης μεταδεδομένων φορητών εκπομπών"
 
-#: ../src/podcasts/grl-podcasts.c:1800
+#: ../src/podcasts/grl-podcasts.c:1792
 msgid "Cannot create containers. Only feeds are accepted"
 msgstr "Αδύνατη η δημιουργία περιεκτών. Μόνο τροφοδοσίες γίνονται δεκτές"
 
-#: ../src/podcasts/grl-podcasts.c:1805
+#: ../src/podcasts/grl-podcasts.c:1797
 msgid "URL required"
-msgstr "Απαιτείται URL"
+msgstr "Απαιτείται διεύθυνση"
 
 #: ../src/raitv/grl-raitv.c:49 ../src/youtube/grl-youtube.c:78
 msgid "Most Popular"
@@ -457,7 +502,7 @@ msgstr "Ελεύθερος χρόνος"
 msgid "Travel"
 msgstr "Ταξίδια"
 
-#: ../src/raitv/grl-raitv.c:611
+#: ../src/raitv/grl-raitv.c:612
 #, c-format
 msgid "Failed to browse: %s"
 msgstr "Αποτυχία περιήγησης του: %s"
@@ -466,29 +511,39 @@ msgstr "Αποτυχία περιήγησης του: %s"
 msgid "A source for browsing SHOUTcast radios"
 msgstr "Μια πηγή για περιήγηση ραδιοφώνων SHOUTcast"
 
-#: ../src/shoutcast/grl-shoutcast.c:462
+#: ../src/shoutcast/grl-shoutcast.c:451
 #, c-format
 msgid "Cannot find media %s"
-msgstr "Αδυναμία εύρεσης μέσων %s"
+msgstr "Αδυναμία εύρεσης πολυμέσων %s"
 
-#: ../src/shoutcast/grl-shoutcast.c:760 ../src/vimeo/grl-vimeo.c:526
+#: ../src/shoutcast/grl-shoutcast.c:746 ../src/vimeo/grl-vimeo.c:542
 msgid "non-NULL search text is required"
 msgstr "Απαιτείται μη μηδενικό κείμενο αναζήτησης"
 
-#: ../src/tmdb/grl-tmdb.c:962
+#: ../src/thetvdb/grl-thetvdb.c:97
+msgid "A source for fetching metadata of television shows"
+msgstr "Μια πηγή για ανάκτηση μεταδεδομένων τηλεοπτικών εκπομπών"
+
+#: ../src/tmdb/grl-tmdb.c:984
 msgid "Remote data does not contain valid identifier"
 msgstr "Τα απομακρυσμένα δεδομένα δεν περιέχουν έγκυρο ταυτοποιητή"
 
 #. I can haz templatze ??
 #. Only emit this last one if more result than expected
 #. Schedule the next line to parse
-#: ../src/tracker/grl-tracker-source-api.c:332
-#: ../src/tracker/grl-tracker-source-api.c:414
+#: ../src/tracker/grl-tracker-source-api.c:361
+#: ../src/tracker/grl-tracker-source-api.c:443
 #, c-format
 msgid "Failed to query: %s"
 msgstr "Αποτυχία ερωτήματος: %s"
 
-#: ../src/tracker/grl-tracker-source-api.c:628
+#: ../src/tracker/grl-tracker-source-api.c:543
+#, c-format
+#| msgid "Failed to get database from magnatune: %s"
+msgid "Failed to get media from uri: %s"
+msgstr "Αποτυχία λήψης πολυμέσων από το uri: %s"
+
+#: ../src/tracker/grl-tracker-source-api.c:714
 msgid "Empty query"
 msgstr "Κενό ερώτημα"
 
@@ -497,34 +552,16 @@ msgid "A plugin for searching multimedia content using Tracker"
 msgstr ""
 "Ένα πρόσθετο για αναζήτηση περιεχομένου πολυμέσων χρησιμοποιώντας ανιχνευτή"
 
-#: ../src/tracker/grl-tracker-utils.c:606
+#: ../src/tracker/grl-tracker-utils.c:659
 #, c-format
 msgid "Removable - %s"
-msgstr "Αφαιρέσιμο - %s"
+msgstr "Αφαιρούμενο - %s"
 
-#: ../src/tracker/grl-tracker-utils.c:618
+#: ../src/tracker/grl-tracker-utils.c:671
 msgid "Local files"
 msgstr "Τοπικά αρχεία"
 
-#: ../src/upnp/grl-upnp.c:53
-#, c-format
-msgid "A source for browsing the UPnP server '%s'"
-msgstr "Μια πηγή για περιήγηση του εξυπηρετητή UPnP '%s'"
-
-#: ../src/upnp/grl-upnp.c:1263 ../src/upnp/grl-upnp.c:1320
-msgid "Failed to browse"
-msgstr "Αποτυχία περιήγησης"
-
-#: ../src/upnp/grl-upnp.c:1383
-msgid "Failed to query"
-msgstr "Αποτυχία ερωτήματος"
-
-#: ../src/upnp/grl-upnp.c:1502
-#, c-format
-msgid "Unable to listen for changes in %s"
-msgstr "Αδύνατη η απόκριση αλλαγών στο %s"
-
-#: ../src/vimeo/grl-vimeo.c:57
+#: ../src/vimeo/grl-vimeo.c:58
 msgid "A source for browsing and searching Vimeo videos"
 msgstr "Μια πηγή για περιήγηση και αναζήτηση βίντεο Vimeo"
 
@@ -576,14 +613,26 @@ msgstr "Παρακολούθηση σε κινητό"
 msgid "A source for browsing and searching YouTube videos"
 msgstr "Μια πηγή για περιήγηση και αναζήτηση βίντεο YouTube"
 
-#: ../src/youtube/grl-youtube.c:937
+#: ../src/youtube/grl-youtube.c:944
 msgid "Failed to get feed"
 msgstr "Αποτυχία λήψης τροφοδοσίας"
 
-#: ../src/youtube/grl-youtube.c:1115 ../src/youtube/grl-youtube.c:1531
+#: ../src/youtube/grl-youtube.c:1121 ../src/youtube/grl-youtube.c:1533
 #, c-format
 msgid "Invalid feed identifier %s"
-msgstr "Άκυρος ταυτοποιητής τροφοδοσίας %s"
+msgstr "Άκυρο αναγνωριστικό τροφοδοσίας %s"
+
+#~ msgid "A source for browsing the UPnP server '%s'"
+#~ msgstr "Μια πηγή για περιήγηση του διακομιστή UPnP '%s'"
+
+#~ msgid "Failed to browse"
+#~ msgstr "Αποτυχία περιήγησης"
+
+#~ msgid "Failed to query"
+#~ msgstr "Αποτυχία ερωτήματος"
+
+#~ msgid "Unable to listen for changes in %s"
+#~ msgstr "Αδύνατη η απόκριση αλλαγών στο %s"
 
 #~ msgid "Cannot get media from %s: %s"
 #~ msgstr "Αδύνατη η λήψη μέσων από το %s: %s"

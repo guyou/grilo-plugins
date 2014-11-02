@@ -24,6 +24,7 @@
 #include "config.h"
 #endif
 
+#define _GNU_SOURCE
 #include <string.h>
 #include <stdlib.h>
 
@@ -47,12 +48,12 @@ GRL_LOG_DOMAIN_STATIC(local_metadata_log_domain);
 
 #define TV_REGEX                                \
   "(?<showname>.*)\\."                          \
-  "(?<season>(?:\\d{1,2})|(?:[sS]\\K\\d{1,2}))" \
-  "(?<episode>(?:\\d{2})|(?:[eE]\\K\\d{1,2}))"  \
-  "\\.?(?<name>.*)?"
+  "(?<season>[sS\\.]\\d{1,2}|\\d{1,2})"         \
+  "(?<episode>(?:[eExX\\.]\\d{1,2}))"           \
+  "\\.?(?<name>.*|(?:\().*))?"
 #define MOVIE_REGEX                             \
   "(?<name>.*)"                                 \
-  "\\.?[\\(\\[](?<year>[12][90]\\d{2})[\\)\\]]"
+  "(?<year>19\\d{2}|20\\d{2})"
 
 /**/
 
@@ -241,6 +242,7 @@ video_sanitise_string (const gchar *str)
 {
   int    i;
   gchar *line;
+  GRegex *regex;
 
   line = (gchar *) str;
   for (i = 0; video_blacklisted_prefix[i]; i++) {
@@ -254,28 +256,29 @@ video_sanitise_string (const gchar *str)
   for (i = 0; video_blacklisted_words[i]; i++) {
     gchar *end;
 
-    end = strstr (line, video_blacklisted_words[i]);
+    end = strcasestr (line, video_blacklisted_words[i]);
     if (end) {
       return g_strndup (line, end - line);
     }
   }
+  regex = g_regex_new ("\\.-\\.", 0, 0, NULL);
+  line = g_regex_replace_literal(regex, line, -1, 0, ".", 0, NULL);
+  g_regex_unref(regex);
 
   return g_strdup (line);
 }
 
 /* tidies strings before we run them through the regexes */
 static gchar *
-video_uri_to_metadata (const gchar *uri)
+video_display_name_to_metadata (const gchar *display_name)
 {
-  gchar *ext, *basename, *name, *whitelisted;
+  gchar *ext, *name, *whitelisted;
 
-  basename = g_path_get_basename (uri);
-  ext = strrchr (basename, '.');
+  ext = strrchr (display_name, '.');
   if (ext) {
-    name = g_strndup (basename, ext - basename);
-    g_free (basename);
+    name = g_strndup (display_name, ext - display_name);
   } else {
-    name = basename;
+    name = g_strdup (display_name);
   }
 
   /* Replace _ <space> with . */
@@ -287,18 +290,18 @@ video_uri_to_metadata (const gchar *uri)
 }
 
 static void
-video_guess_values_from_uri (const gchar *uri,
-                             gchar      **title,
-                             gchar      **showname,
-                             GDateTime  **date,
-                             gint        *season,
-                             gint        *episode)
+video_guess_values_from_display_name (const gchar *display_name,
+                                      gchar      **title,
+                                      gchar      **showname,
+                                      GDateTime  **date,
+                                      gint        *season,
+                                      gint        *episode)
 {
   gchar      *metadata;
   GRegex     *regex;
   GMatchInfo *info;
 
-  metadata = video_uri_to_metadata (uri);
+  metadata = video_display_name_to_metadata (display_name);
 
   regex = g_regex_new (MOVIE_REGEX, 0, 0, NULL);
   g_regex_match (regex, metadata, 0, &info);
@@ -308,6 +311,7 @@ video_guess_values_from_uri (const gchar *uri,
       *title = g_match_info_fetch_named (info, "name");
       /* Replace "." with <space> */
       g_strdelimit (*title, ".", ' ');
+      *title = g_strstrip (*title);
     }
 
     if (date) {
@@ -345,12 +349,14 @@ video_guess_values_from_uri (const gchar *uri,
   if (g_match_info_matches (info)) {
     if (title) {
       *title = g_match_info_fetch_named (info, "name");
-      g_strdelimit (*title, ".", ' ');
+      g_strdelimit (*title, ".()", ' ');
+      *title = g_strstrip (*title);
     }
 
     if (showname) {
       *showname = g_match_info_fetch_named (info, "showname");
       g_strdelimit (*showname, ".", ' ');
+      *showname = g_strstrip (*showname);
     }
 
     if (season) {
@@ -371,7 +377,7 @@ video_guess_values_from_uri (const gchar *uri,
     if (episode) {
       gchar *e = g_match_info_fetch_named (info, "episode");
       if (e) {
-        if (*e == 'e' || *e == 'E') {
+        if (*e == 'e' || *e == 'E' || *e == 'x' || *e == '.') {
           *episode = atoi (e + 1);
         } else {
           *episode = atoi (e);
@@ -495,7 +501,7 @@ resolve_video (GrlSource *source,
                GrlKeyID key,
                resolution_flags_t flags)
 {
-  gchar *title, *showname;
+  gchar *title, *showname, *display_name;
   GDateTime *date;
   gint season, episode;
   GrlData *data = GRL_DATA (rs->media);
@@ -510,8 +516,14 @@ resolve_video (GrlSource *source,
                  FLAG_VIDEO_EPISODE)))
     return;
 
-  miss_flags |= grl_data_has_key (data, GRL_METADATA_KEY_TITLE) ?
-    0 : FLAG_VIDEO_TITLE;
+  if (grl_data_has_key (data, GRL_METADATA_KEY_TITLE)) {
+    if (grl_data_get_boolean (data, GRL_METADATA_KEY_TITLE_FROM_FILENAME)) {
+      miss_flags = FLAG_VIDEO_TITLE;
+    } else
+      miss_flags = 0;
+  } else {
+    miss_flags = FLAG_VIDEO_TITLE;
+  }
   miss_flags |= grl_data_has_key (data, GRL_METADATA_KEY_SHOW) ?
     0 : FLAG_VIDEO_SHOWNAME;
   miss_flags |= grl_data_has_key (data, GRL_METADATA_KEY_PUBLICATION_DATE) ?
@@ -526,17 +538,30 @@ resolve_video (GrlSource *source,
   if (!fill_flags)
     return;
 
-  video_guess_values_from_uri (grl_data_get_string (GRL_DATA (rs->media), key),
-                               &title, &showname, &date,
-                               &season, &episode);
+  if (key == GRL_METADATA_KEY_URL) {
+    GFile *file;
+
+    file = g_file_new_for_uri (grl_media_get_url (rs->media));
+    display_name = g_file_get_basename (file);
+    g_object_unref (file);
+  } else {
+    display_name = g_strdup (grl_media_get_title (rs->media));
+  }
+
+  video_guess_values_from_display_name (display_name,
+                                        &title, &showname, &date,
+                                        &season, &episode);
+
+  g_free (display_name);
 
   GRL_DEBUG ("\tfound title=%s/showname=%s/year=%i/season=%i/episode=%i",
              title, showname,
              date != NULL ? g_date_time_get_year (date) : 0,
              season, episode);
 
-  /* As this is just a guess, don't erase already provided values. */
-  if (title) {
+  /* As this is just a guess, don't erase already provided values,
+   * unless GRL_METADATA_KEY_TITLE_FROM_FILENAME is set */
+  if (grl_data_get_boolean (data, GRL_METADATA_KEY_TITLE_FROM_FILENAME)) {
     if (fill_flags & FLAG_VIDEO_TITLE) {
       grl_data_set_string (data, GRL_METADATA_KEY_TITLE, title);
     }
@@ -608,7 +633,8 @@ resolve_album_art (GrlSource *source,
                    resolution_flags_t flags)
 {
   const gchar *artist, *album;
-  char *thumbnail_uri;
+  char *cache_uri = NULL;
+  char *thumbnail_uri = NULL;
 
   artist = grl_media_audio_get_artist (GRL_MEDIA_AUDIO (rs->media));
   album = grl_media_audio_get_album (GRL_MEDIA_AUDIO (rs->media));
@@ -616,13 +642,19 @@ resolve_album_art (GrlSource *source,
   if (!artist || !album)
     return TRUE;
 
-  media_art_get_path (artist, album, "album", NULL, NULL, &thumbnail_uri);
+  media_art_get_path (artist, album, "album", NULL, &cache_uri, &thumbnail_uri);
 
-  if (thumbnail_uri) {
+  if (thumbnail_uri)
     grl_media_set_thumbnail (rs->media, thumbnail_uri);
-    g_free (thumbnail_uri);
-  }
+  else if (cache_uri)
+    grl_media_set_thumbnail (rs->media, cache_uri);
+  else
+    GRL_DEBUG ("Found no thumbnail for artist %s and album %s", artist, album);
+
   rs->callback (rs->source, rs->operation_id, rs->media, rs->user_data, NULL);
+
+  g_free (cache_uri);
+  g_free (thumbnail_uri);
 
   return FALSE;
 }
@@ -666,6 +698,8 @@ has_compatible_media_url (GrlMedia *media)
     source = grl_data_get_string (GRL_DATA (media), GRL_METADATA_KEY_SOURCE);
 
     if (g_str_has_prefix (source, "grl-upnp-uuid:"))
+      return FALSE;
+    if (g_str_has_prefix (source, "grl-dleyna-uuid:"))
       return FALSE;
   }
 
@@ -832,6 +866,8 @@ grl_local_metadata_source_resolve (GrlSource *source,
   can_access = has_compatible_media_url (rs->media);
 
   flags = get_resolution_flags (rs->keys);
+  if (grl_data_get_boolean (GRL_DATA (rs->media), GRL_METADATA_KEY_TITLE_FROM_FILENAME))
+    flags |= FLAG_VIDEO_TITLE;
 
    if (!flags)
      error = g_error_new_literal (GRL_CORE_ERROR,

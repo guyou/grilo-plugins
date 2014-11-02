@@ -24,6 +24,8 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <archive.h>
+#include <archive_entry.h>
 
 #include "grl-lua-common.h"
 #include "grl-lua-library.h"
@@ -32,7 +34,7 @@
 #define GRL_LOG_DOMAIN_DEFAULT lua_library_log_domain
 GRL_LOG_DOMAIN_STATIC (lua_library_log_domain);
 
-typedef struct _FetchOperation {
+typedef struct {
   lua_State *L;
   guint operation_id;
   gchar *lua_cb;
@@ -42,6 +44,14 @@ typedef struct _FetchOperation {
   gboolean is_table;
   gchar **results;
 } FetchOperation;
+
+typedef struct {
+  lua_State *L;
+  guint operation_id;
+  gchar *lua_cb;
+  gchar *url;
+  gchar **filenames;
+} UnzipOperation;
 
 /* ================== Lua-Library utils/helpers ============================ */
 
@@ -133,6 +143,8 @@ unescape_string (const char *orig_from)
     }
   }
 
+  *to = '\0';
+
   return ret;
 }
 
@@ -144,7 +156,7 @@ grl_util_add_table_to_media (lua_State *L,
                              const gchar *key_name,
                              GType type)
 {
-  gint i = 0;
+  gint i;
   gint array_len = luaL_len (L, -1);
 
   /* Remove all current values of this key, if any */
@@ -184,7 +196,7 @@ static GrlMedia *
 grl_util_build_media (lua_State *L,
                       GrlMedia *user_media)
 {
-  GrlRegistry *registry = NULL;
+  GrlRegistry *registry;
   GrlMedia *media = user_media;
 
   if (!lua_istable (L, 1)) {
@@ -300,15 +312,21 @@ grl_util_fetch_done (GObject *source_object,
                      GAsyncResult *res,
                      gpointer user_data)
 {
-  gchar *data = NULL;
-  guint i = 0;
+  gchar *data;
+  gsize len;
+  guint i;
   GError *err = NULL;
   OperationSpec *os;
   FetchOperation *fo = (FetchOperation *) user_data;
   lua_State *L = fo->L;
 
   grl_net_wc_request_finish (GRL_NET_WC (source_object),
-                             res, &data, NULL, &err);
+                             res, &data, &len, &err);
+  if (!g_utf8_validate(data, len, NULL)) {
+    data = NULL;
+    g_set_error_literal (&err, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                         "Fetched item is not valid UTF-8");
+  }
 
   fo->results[fo->index] = (err == NULL) ? g_strdup (data) : g_strdup ("");
   if (err != NULL) {
@@ -361,6 +379,186 @@ grl_util_fetch_done (GObject *source_object,
   g_free (fo);
 }
 
+static gboolean
+str_in_strv_at_index (const char **filenames,
+                      const char  *name,
+                      guint       *idx)
+{
+  guint i;
+
+  for (i = 0; filenames[i] != NULL; i++) {
+    if (g_strcmp0 (name, filenames[i]) == 0) {
+      *idx = i;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static char **
+get_zipped_contents (guchar        *data,
+                     gsize          size,
+                     const char   **filenames)
+{
+  GPtrArray *results;
+  struct archive *a;
+  struct archive_entry *entry;
+  int r;
+
+  a = archive_read_new ();
+  archive_read_support_format_zip (a); //FIXME more formats?
+  r = archive_read_open_memory (a, data, size);
+  if (r != ARCHIVE_OK) {
+    g_print ("Failed to open archive\n");
+    return NULL;
+  }
+
+  results = g_ptr_array_new ();
+  g_ptr_array_set_size (results, g_strv_length ((gchar **) filenames) + 1);
+
+  while (1) {
+    const char *name;
+    guint idx;
+
+    r = archive_read_next_header(a, &entry);
+
+    if (r != ARCHIVE_OK) {
+      if (r != ARCHIVE_EOF && r == ARCHIVE_FATAL)
+        g_warning ("Fatal error handling archive: %s", archive_error_string (a));
+      break;
+    }
+
+    name = archive_entry_pathname (entry);
+    if (str_in_strv_at_index (filenames, name, &idx) != FALSE) {
+      size_t size = archive_entry_size (entry);
+      char *buf;
+      ssize_t read;
+
+      buf = g_malloc (size + 1);
+      buf[size] = 0;
+      read = archive_read_data (a, buf, size);
+      if (read <= 0) {
+        g_free (buf);
+        if (read < 0)
+          g_warning ("Fatal error reading '%s' in archive: %s", name, archive_error_string (a));
+        else
+          g_warning ("Read an empty file from the archive");
+      } else {
+        GRL_DEBUG ("Setting content for %s at %d", name, idx);
+        /* FIXME check for validity? */
+        results->pdata[idx] = buf;
+      }
+    }
+    archive_read_data_skip(a);
+  }
+  archive_read_free(a);
+
+  return (gchar **) g_ptr_array_free (results, FALSE);
+}
+
+static void
+grl_util_unzip_done (GObject *source_object,
+                     GAsyncResult *res,
+                     gpointer user_data)
+{
+  gchar *data;
+  gsize len;
+  guint i;
+  GError *err = NULL;
+  OperationSpec *os;
+  UnzipOperation *uo = (UnzipOperation *) user_data;
+  lua_State *L = uo->L;
+  char **results;
+
+  grl_net_wc_request_finish (GRL_NET_WC (source_object),
+                             res, &data, &len, &err);
+
+  if (err != NULL) {
+    guint len, i;
+    GRL_WARNING ("Can't fetch zip file (URL: %s): '%s'", uo->url, err->message);
+    g_error_free (err);
+    len = g_strv_length (uo->filenames);
+    results = g_new0 (gchar *, len + 1);
+    for (i = 0; i < len; i++)
+      results[i] = g_strdup("");
+  } else {
+    GRL_DEBUG ("fetch_done element (URL: %s)", uo->url);
+    results = get_zipped_contents ((guchar *) data, len, (const gchar **) uo->filenames);
+  }
+
+  grl_lua_library_set_current_operation (L, uo->operation_id);
+  os = grl_lua_library_get_current_operation (L);
+  os->pending_ops--;
+
+  lua_getglobal (L, uo->lua_cb);
+
+  lua_newtable (L);
+  for (i = 0; results[i] != NULL; i++) {
+    lua_pushnumber (L, i + 1);
+    lua_pushlstring (L, results[i], strlen (results[i]));
+    lua_settable (L, -3);
+  }
+
+  if (lua_pcall (L, 1, 0, 0)) {
+    GRL_WARNING ("%s (%s) '%s'", "calling source callback function fail",
+                 uo->lua_cb, lua_tolstring (L, -1, NULL));
+  }
+
+  grl_lua_library_set_current_operation (L, 0);
+
+  g_strfreev (results);
+
+  g_strfreev (uo->filenames);
+  g_free (uo->lua_cb);
+  g_free (uo->url);
+  g_free (uo);
+}
+
+static GrlNetWc *
+net_wc_new_with_options(lua_State *L,
+                        guint      arg_offset)
+{
+  GrlNetWc *wc;
+
+  wc = grl_net_wc_new ();
+  if (arg_offset < lua_gettop (L) && lua_istable (L, arg_offset)) {
+    /* Set GrlNetWc options */
+    lua_pushnil (L);
+    while (lua_next (L, arg_offset) != 0) {
+      const gchar *key = lua_tostring (L, -2);
+      if (g_strcmp0 (key, "user-agent") == 0 ||
+          g_strcmp0 (key, "user_agent") == 0) {
+        const gchar *user_agent = lua_tostring (L, -1);
+        g_object_set (wc, "user-agent", user_agent, NULL);
+
+      } else if (g_strcmp0 (key, "cache-size") == 0 ||
+                 g_strcmp0 (key, "cache_size") == 0) {
+        guint size = lua_tonumber (L, -1);
+        grl_net_wc_set_cache_size (wc, size);
+
+      } else if (g_strcmp0 (key, "cache") == 0) {
+        gboolean use_cache = lua_toboolean (L, -1);
+        grl_net_wc_set_cache (wc, use_cache);
+
+      } else if (g_strcmp0 (key, "throttling") == 0) {
+        guint throttling = lua_tonumber (L, -1);
+        grl_net_wc_set_throttling (wc, throttling);
+
+      } else if (g_strcmp0 (key, "loglevel") == 0) {
+        guint level = lua_tonumber (L, -1);
+        grl_net_wc_set_log_level (wc, level);
+
+      } else {
+        GRL_DEBUG ("GrlNetWc property not know: '%s'", key);
+      }
+      lua_pop (L, 1);
+    }
+  }
+
+  return wc;
+}
+
 /* ================== Lua-Library methods ================================== */
 
 /**
@@ -373,14 +571,37 @@ grl_util_fetch_done (GObject *source_object,
 static gint
 grl_l_operation_get_options (lua_State *L)
 {
-  OperationSpec *os = NULL;
-  const gchar *option = NULL;
+  OperationSpec *os;
+  const gchar *option;
 
   luaL_argcheck (L, lua_isstring (L, 1), 1, "expecting option (string)");
 
   os = grl_lua_library_get_current_operation (L);
   g_return_val_if_fail (os != NULL, 0);
   option = lua_tostring (L, 1);
+
+  if (g_strcmp0 (option, "type") == 0) {
+    const char *type;
+    switch (os->op_type) {
+    case LUA_SEARCH:
+      type = "search";
+      break;
+    case LUA_BROWSE:
+      type = "browse";
+      break;
+    case LUA_QUERY:
+      type = "query";
+      break;
+    case LUA_RESOLVE:
+      type = "resolve";
+      break;
+    default:
+      g_assert_not_reached ();
+    }
+
+    lua_pushstring (L, type);
+    return 1;
+  }
 
   if (g_strcmp0 (option, "count") == 0) {
     gint count = grl_operation_options_get_count (os->options);
@@ -416,15 +637,15 @@ grl_l_operation_get_options (lua_State *L)
     value = grl_operation_options_get_key_filter (os->options, key);
     switch (grl_registry_lookup_metadata_key_type (registry, key)) {
     case G_TYPE_INT:
-      (value) ? lua_pushnumber (L, g_value_get_int (value)) : lua_pushnil (L);
+      (value) ? (void) lua_pushnumber (L, g_value_get_int (value)) : lua_pushnil (L);
       break;
 
     case G_TYPE_FLOAT:
-      (value) ? lua_pushnumber (L, g_value_get_float (value)) : lua_pushnil (L);
+      (value) ? (void) lua_pushnumber (L, g_value_get_float (value)) : lua_pushnil (L);
       break;
 
     case G_TYPE_STRING:
-      (value) ? lua_pushstring (L, g_value_get_string (value)) : lua_pushnil (L);
+      (value) ? (void) lua_pushstring (L, g_value_get_string (value)) : lua_pushnil (L);
       break;
 
     default:
@@ -449,18 +670,18 @@ grl_l_operation_get_options (lua_State *L)
       grl_operation_options_get_key_range_filter (os->options, key, &min, &max);
       switch (grl_registry_lookup_metadata_key_type (registry, key)) {
       case G_TYPE_INT:
-        (min) ? lua_pushnumber (L, g_value_get_int (min)) : lua_pushnil (L);
-        (max) ? lua_pushnumber (L, g_value_get_int (max)) : lua_pushnil (L);
+        (min) ? (void) lua_pushnumber (L, g_value_get_int (min)) : lua_pushnil (L);
+        (max) ? (void) lua_pushnumber (L, g_value_get_int (max)) : lua_pushnil (L);
         break;
 
       case G_TYPE_FLOAT:
-        (min) ? lua_pushnumber (L, g_value_get_float (min)) : lua_pushnil (L);
-        (max) ? lua_pushnumber (L, g_value_get_float (max)) : lua_pushnil (L);
+        (min) ? (void) lua_pushnumber (L, g_value_get_float (min)) : lua_pushnil (L);
+        (max) ? (void) lua_pushnumber (L, g_value_get_float (max)) : lua_pushnil (L);
         break;
 
       case G_TYPE_STRING:
-        (min) ? lua_pushstring (L, g_value_get_string (min)) : lua_pushnil (L);
-        (max) ? lua_pushstring (L, g_value_get_string (max)) : lua_pushnil (L);
+        (min) ? (void) lua_pushstring (L, g_value_get_string (min)) : lua_pushnil (L);
+        (max) ? (void) lua_pushstring (L, g_value_get_string (max)) : lua_pushnil (L);
         break;
 
       default:
@@ -476,6 +697,24 @@ grl_l_operation_get_options (lua_State *L)
     return 1;
   }
 
+  if (g_strcmp0 (option, "media-id") == 0 &&
+      os->op_type == LUA_BROWSE) {
+    lua_pushstring (L, os->string);
+    return 1;
+  }
+
+  if (g_strcmp0 (option, "query") == 0 &&
+      os->op_type == LUA_QUERY) {
+    lua_pushstring (L, os->string);
+    return 1;
+  }
+
+  if (g_strcmp0 (option, "search") == 0 &&
+      os->op_type == LUA_SEARCH) {
+    lua_pushstring (L, os->string);
+    return 1;
+  }
+
   luaL_error (L, "'%s' is not available nor implemented.", option);
   return 0;
 }
@@ -488,11 +727,9 @@ grl_l_operation_get_options (lua_State *L)
 static gint
 grl_l_operation_get_keys (lua_State *L)
 {
-  OperationSpec *os = NULL;
-  GrlRegistry *registry = NULL;
-  GList *it = NULL;
-  GrlKeyID key_id;
-  const gchar *key_name = NULL;
+  OperationSpec *os;
+  GrlRegistry *registry;
+  GList *it;
   gint i = 0;
 
   os = grl_lua_library_get_current_operation (L);
@@ -501,13 +738,16 @@ grl_l_operation_get_keys (lua_State *L)
   registry = grl_registry_get_default ();
   lua_newtable (L);
   for (it = os->keys; it; it = g_list_next (it)) {
+    GrlKeyID key_id;
+    const gchar *key_name;
+
     key_id = GRLPOINTER_TO_KEYID (it->data);
     key_name = grl_registry_lookup_metadata_key_name (registry, key_id);
     if (key_id != GRL_METADATA_KEY_INVALID) {
       lua_pushinteger (L, i + 1);
       lua_pushstring (L, key_name);
       lua_settable (L, -3);
-      i = i + 1;
+      i++;
     }
   }
   return 1;
@@ -521,12 +761,10 @@ grl_l_operation_get_keys (lua_State *L)
 static gint
 grl_l_media_get_keys (lua_State *L)
 {
-  OperationSpec *os = NULL;
-  GrlRegistry *registry = NULL;
-  GList *it = NULL;
-  GList *list_keys = NULL;
-  GrlKeyID key_id;
-  gchar *key_name = NULL;
+  OperationSpec *os;
+  GrlRegistry *registry;
+  GList *it;
+  GList *list_keys;
 
   os = grl_lua_library_get_current_operation (L);
   g_return_val_if_fail (os != NULL, 0);
@@ -535,8 +773,11 @@ grl_l_media_get_keys (lua_State *L)
   lua_newtable (L);
   list_keys = grl_data_get_keys (GRL_DATA (os->media));
   for (it = list_keys; it; it = g_list_next (it)) {
+    GrlKeyID key_id;
+    gchar *key_name;
     gchar *ptr = NULL;
     GType type = G_TYPE_NONE;
+
     key_id = GRLPOINTER_TO_KEYID (it->data);
     key_name = g_strdup (grl_registry_lookup_metadata_key_name (registry,
                                                                 key_id));
@@ -593,13 +834,12 @@ grl_l_media_get_keys (lua_State *L)
 static gint
 grl_l_fetch (lua_State *L)
 {
-  guint i = 0;
-  guint num_urls = 0;
-  gchar **urls = NULL;
-  gchar **results = NULL;
-  const gchar *lua_callback = NULL;
-  GrlNetWc *wc = NULL;
-  FetchOperation *fo = NULL;
+  guint i;
+  guint num_urls;
+  gchar **urls;
+  gchar **results;
+  const gchar *lua_callback;
+  GrlNetWc *wc;
   gboolean is_table = FALSE;
   OperationSpec *os;
 
@@ -636,44 +876,13 @@ grl_l_fetch (lua_State *L)
 
   lua_callback = lua_tolstring (L, 2, NULL);
 
-  wc = grl_net_wc_new ();
-  if (lua_istable (L, 3)) {
-    /* Set GrlNetWc options */
-    lua_pushnil (L);
-    while (lua_next (L, 3) != 0) {
-      const gchar *key = lua_tostring (L, -2);
-      if (g_strcmp0 (key, "user-agent") == 0 ||
-          g_strcmp0 (key, "user_agent") == 0) {
-        const gchar *user_agent = lua_tostring (L, -1);
-        g_object_set (wc, "user-agent", user_agent, NULL);
-
-      } else if (g_strcmp0 (key, "cache-size") == 0 ||
-                 g_strcmp0 (key, "cache_size") == 0) {
-        guint size = lua_tonumber (L, -1);
-        grl_net_wc_set_cache_size (wc, size);
-
-      } else if (g_strcmp0 (key, "cache") == 0) {
-        gboolean use_cache = lua_toboolean (L, -1);
-        grl_net_wc_set_cache (wc, use_cache);
-
-      } else if (g_strcmp0 (key, "throttling") == 0) {
-        guint throttling = lua_tonumber (L, -1);
-        grl_net_wc_set_throttling (wc, throttling);
-
-      } else if (g_strcmp0 (key, "loglevel") == 0) {
-        guint level = lua_tonumber (L, -1);
-        grl_net_wc_set_log_level (wc, level);
-
-      } else {
-        GRL_DEBUG ("GrlNetWc property not know: '%s'", key);
-      }
-      lua_pop (L, 1);
-    }
-  }
+  wc = net_wc_new_with_options(L, 3);
 
   /* shared data between urls */
   results = g_new0 (gchar *, num_urls);
   for (i = 0; i < num_urls; i++) {
+    FetchOperation *fo;
+
     fo = g_new0 (FetchOperation, 1);
     fo->L = L;
     fo->operation_id = os->operation_id;
@@ -701,10 +910,10 @@ grl_l_fetch (lua_State *L)
 static gint
 grl_l_callback (lua_State *L)
 {
-  gint nparam = 0;
+  gint nparam;
   gint count = 0;
-  OperationSpec *os = NULL;
-  GrlMedia *media = NULL;
+  OperationSpec *os;
+  GrlMedia *media;
 
   GRL_DEBUG ("grl.callback()");
 
@@ -734,6 +943,8 @@ grl_l_callback (lua_State *L)
     g_object_unref (os->options);
     os->callback_done = TRUE;
     grl_lua_library_remove_operation_data (L, os->operation_id);
+    grl_lua_library_set_current_operation (L, 0);
+    g_free (os->string);
     g_slice_free (OperationSpec, os);
   }
 
@@ -849,6 +1060,69 @@ grl_l_unescape (lua_State *L)
   return 1;
 }
 
+/**
+ * grl.unzip
+ *
+ * @url: (string) the URL of the zip file to fetch
+ * @filenames: (table) a table of filenames to get inside the zip file
+ * @callback: (string) The function to be called after fetch is complete.
+ * @netopts: (table) Options to set the GrlNetWc object.
+ * @return: Nothing.;
+ */
+static gint
+grl_l_unzip (lua_State *L)
+{
+  const gchar *lua_callback;
+  const gchar *url;
+  GrlNetWc *wc;
+  OperationSpec *os;
+  UnzipOperation *uo;
+  guint num_filenames, i;
+  gchar **filenames;
+
+  luaL_argcheck (L, lua_isstring (L, 1), 1,
+                 "expecting url as string");
+  luaL_argcheck (L, lua_istable (L, 2), 2,
+                 "expecting filenames as an array of filenames");
+  luaL_argcheck (L, lua_isstring (L, 3), 3,
+                 "expecting callback function as string");
+
+  os = grl_lua_library_get_current_operation (L);
+  g_return_val_if_fail (os != NULL, 0);
+  os->pending_ops++;
+
+  url = lua_tolstring (L, 1, NULL);
+  num_filenames = luaL_len(L, 2);
+  filenames = g_new0 (gchar *, num_filenames + 1);
+  for (i = 0; i < num_filenames; i++) {
+    lua_pushinteger (L, i + 1);
+    lua_gettable (L, 2);
+    if (lua_isstring (L, -1)) {
+      filenames[i] = g_strdup (lua_tostring (L, -1));
+    } else {
+      luaL_error (L, "Array of urls expect strings only: at index %d is %s",
+                  i + 1, luaL_typename (L, -1));
+    }
+    GRL_DEBUG ("grl.unzip() -> filenames[%d]: '%s'", i, filenames[i]);
+    lua_pop (L, 1);
+  }
+  GRL_DEBUG ("grl.unzip() -> '%s'", url);
+
+  lua_callback = lua_tolstring (L, 3, NULL);
+  wc = net_wc_new_with_options (L, 4);
+
+  uo = g_new0 (UnzipOperation, 1);
+  uo->L = L;
+  uo->operation_id = os->operation_id;
+  uo->lua_cb = g_strdup (lua_callback);
+  uo->url = g_strdup (url);
+  uo->filenames = filenames;
+
+  grl_net_wc_request_async (wc, url, NULL, grl_util_unzip_done, uo);
+  g_object_unref (wc);
+  return 1;
+}
+
 /* ================== Lua-Library initialization =========================== */
 
 gint
@@ -865,6 +1139,7 @@ luaopen_grilo (lua_State *L)
     {"dgettext", &grl_l_dgettext},
     {"decode", &grl_l_decode},
     {"unescape", &grl_l_unescape},
+    {"unzip", &grl_l_unzip},
     {NULL, NULL}
   };
 

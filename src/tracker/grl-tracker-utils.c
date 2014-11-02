@@ -36,6 +36,7 @@ static GHashTable *grl_to_sparql_mapping = NULL;
 static GHashTable *sparql_to_grl_mapping = NULL;
 
 GrlKeyID grl_metadata_key_tracker_urn;
+GrlKeyID grl_metadata_key_gibest_hash;
 
 
 /**/
@@ -88,6 +89,30 @@ set_date (TrackerSparqlCursor *cursor,
       g_date_time_unref (date);
     }
   }
+}
+
+static void
+set_title_from_filename (TrackerSparqlCursor *cursor,
+                         gint                 column,
+                         GrlMedia            *media,
+                         GrlKeyID             key)
+{
+  const gchar *str = tracker_sparql_cursor_get_string (cursor, column, NULL);
+  if (key == GRL_METADATA_KEY_TITLE) {
+    grl_data_set_boolean (GRL_DATA (media), GRL_METADATA_KEY_TITLE_FROM_FILENAME, TRUE);
+    grl_media_set_title (media, str);
+  }
+}
+
+static void
+set_title (TrackerSparqlCursor *cursor,
+           gint                 column,
+           GrlMedia            *media,
+           GrlKeyID             key)
+{
+  const gchar *str = tracker_sparql_cursor_get_string (cursor, column, NULL);
+  grl_data_set_boolean (GRL_DATA (media), GRL_METADATA_KEY_TITLE_FROM_FILENAME, FALSE);
+  grl_media_set_title (media, str);
 }
 
 static tracker_grl_sparql_t *
@@ -165,6 +190,22 @@ grl_tracker_setup_key_mappings (void)
                                           NULL);
   }
 
+  /* Check if "gibest-hash" is registered; if not, then register it */
+  grl_metadata_key_gibest_hash =
+    grl_registry_lookup_metadata_key (registry, "gibest-hash");
+
+  if (grl_metadata_key_gibest_hash == GRL_METADATA_KEY_INVALID) {
+    grl_metadata_key_gibest_hash =
+      grl_registry_register_metadata_key (grl_registry_get_default (),
+                                          g_param_spec_string ("gibest-hash",
+                                                               "Gibest hash",
+                                                               "Gibest hash of the video file",
+                                                               NULL,
+                                                               G_PARAM_STATIC_STRINGS |
+                                                               G_PARAM_READWRITE),
+                                          NULL);
+  }
+
   grl_to_sparql_mapping = g_hash_table_new (g_direct_hash, g_direct_equal);
   sparql_to_grl_mapping = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -202,6 +243,11 @@ grl_tracker_setup_key_mappings (void)
                       NULL,
                       "nfo:fileSize(?urn)",
                       "file");
+
+  insert_key_mapping (grl_metadata_key_gibest_hash,
+                      NULL,
+                      "(select nfo:hashValue(?h) { ?urn nfo:hasHash ?h . ?h nfo:hashAlgorithm \"gibest\" })",
+                      "video");
 
   insert_key_mapping_with_setter (GRL_METADATA_KEY_MODIFICATION_DATE,
                                   "nfo:fileLastModified",
@@ -243,15 +289,17 @@ grl_tracker_setup_key_mappings (void)
                       "nie:url(?urn)",
                       "file");
 
-  insert_key_mapping (GRL_METADATA_KEY_TITLE,
-                      "nie:title",
-                      "nie:title(?urn)",
-                      "audio");
+  insert_key_mapping_with_setter (GRL_METADATA_KEY_TITLE,
+                                  "nie:title",
+                                  "nie:title(?urn)",
+                                  "audio",
+                                  set_title);
 
-  insert_key_mapping (GRL_METADATA_KEY_TITLE,
-                      "nfo:fileName",
-                      "nfo:fileName(?urn)",
-                      "file");
+  insert_key_mapping_with_setter (GRL_METADATA_KEY_TITLE,
+                                  "nfo:fileName",
+                                  "nfo:fileName(?urn)",
+                                  "file",
+                                  set_title_from_filename);
 
   insert_key_mapping (GRL_METADATA_KEY_URL,
                       "nie:url",

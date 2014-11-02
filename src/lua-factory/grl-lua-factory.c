@@ -107,6 +107,8 @@ static void grl_lua_factory_source_finalize (GObject *object);
 
 static const GList *grl_lua_factory_source_supported_keys (GrlSource *source);
 
+static const GList *grl_lua_factory_source_slow_keys(GrlSource *source);
+
 static void grl_lua_factory_source_search (GrlSource *source,
                                            GrlSourceSearchSpec *ss);
 
@@ -314,6 +316,7 @@ grl_lua_factory_source_class_init (GrlLuaFactorySourceClass *klass)
   g_class->finalize = grl_lua_factory_source_finalize;
 
   source_class->supported_keys = grl_lua_factory_source_supported_keys;
+  source_class->slow_keys= grl_lua_factory_source_slow_keys;
   source_class->supported_operations = grl_lua_factory_source_supported_operations;
   source_class->search = grl_lua_factory_source_search;
   source_class->browse = grl_lua_factory_source_browse;
@@ -501,6 +504,7 @@ get_lua_sources (void)
   gint i = 0;
   const gchar *envvar = NULL;
   const gchar *it_file = NULL;
+  GHashTable *ht;
 
   GRL_DEBUG ("get_lua_sources");
 
@@ -510,8 +514,7 @@ get_lua_sources (void)
     gchar **local_dirs;
 
     /* Environment-only plugins */
-    GRL_DEBUG ("'%s' %s", ENV_LUA_SOURCES_PATH,
-               "is setted - Getting lua-sources only from there.");
+    GRL_DEBUG ("'%s' is set - Getting lua-sources only from there.", ENV_LUA_SOURCES_PATH);
     local_dirs = g_strsplit (envvar, G_SEARCHPATH_SEPARATOR_S, -1);
     if (local_dirs) {
       while (local_dirs[i] != NULL) {
@@ -533,12 +536,16 @@ get_lua_sources (void)
                                                       LUA_FACTORY_SOURCE_LOCATION,
                                                       NULL));
     }
+    l_locations = g_list_reverse (l_locations);
+
     /* User locations */
     l_locations = g_list_prepend (l_locations,
                                   g_build_filename (g_get_user_data_dir (),
                                                     LUA_FACTORY_SOURCE_LOCATION,
                                                     NULL));
   }
+
+  ht = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
   for (it_path = l_locations; it_path; it_path = it_path->next) {
     dir = g_dir_open (it_path->data, 0, NULL);
@@ -549,14 +556,18 @@ get_lua_sources (void)
          it_file;
          it_file = g_dir_read_name (dir)) {
       if (g_str_has_suffix (it_file, ".lua")) {
-        lua_sources = g_list_prepend (lua_sources,
-                                      g_build_filename (it_path->data,
-                                                        it_file, NULL));
+        if (g_hash_table_lookup (ht, it_file) == NULL) {
+          lua_sources = g_list_prepend (lua_sources,
+                                        g_build_filename (it_path->data,
+                                                          it_file, NULL));
+          g_hash_table_insert (ht, g_strdup (it_file), GINT_TO_POINTER(TRUE));
+        }
       }
     }
     g_dir_close (dir);
   }
 
+  g_hash_table_destroy (ht);
   g_list_free_full (l_locations, g_free);
   return g_list_reverse (lua_sources);
 }
@@ -952,6 +963,13 @@ grl_lua_factory_source_supported_keys (GrlSource *source)
   return lua_source->priv->supported_keys;
 }
 
+static const GList *
+grl_lua_factory_source_slow_keys (GrlSource *source)
+{
+  GrlLuaFactorySource *lua_source = GRL_LUA_FACTORY_SOURCE (source);
+  return lua_source->priv->slow_keys;
+}
+
 static GrlSupportedOps
 grl_lua_factory_source_supported_operations (GrlSource *source)
 {
@@ -977,11 +995,14 @@ grl_lua_factory_source_search (GrlSource *source,
 
   GRL_DEBUG ("grl_lua_factory_source_search");
 
+  text = (ss->text == NULL) ? "" : ss->text;
+
   os = g_slice_new0 (OperationSpec);
   os->source = ss->source;
   os->operation_id = ss->operation_id;
   os->cb.result = ss->callback;
   os->user_data = ss->user_data;
+  os->string = g_strdup (text);
   os->error_code = GRL_CORE_ERROR_SEARCH_FAILED;
   os->keys = g_list_copy (ss->keys);
   os->options = grl_operation_options_copy (ss->options);
@@ -991,7 +1012,6 @@ grl_lua_factory_source_search (GrlSource *source,
   grl_lua_library_set_current_operation (L, os->operation_id);
   lua_getglobal (L, LUA_SOURCE_OPERATION[LUA_SEARCH]);
 
-  text = (ss->text == NULL) ? "" : ss->text;
   lua_pushstring (L, text);
   if (lua_pcall (L, 1, 0, 0)) {
     GRL_WARNING ("%s '%s'", "calling search function fail:",
@@ -1013,12 +1033,15 @@ grl_lua_factory_source_browse (GrlSource *source,
 
   GRL_DEBUG ("grl_lua_factory_source_browse");
 
+  media_id = bs->container ? grl_media_get_id (bs->container) : NULL;
+
   os = g_slice_new0 (OperationSpec);
   os->source = bs->source;
   os->operation_id = bs->operation_id;
   os->media = bs->container;
   os->cb.result = bs->callback;
   os->user_data = bs->user_data;
+  os->string = g_strdup (media_id);
   os->error_code = GRL_CORE_ERROR_BROWSE_FAILED;
   os->keys = g_list_copy (bs->keys);
   os->options = grl_operation_options_copy (bs->options);
@@ -1028,7 +1051,6 @@ grl_lua_factory_source_browse (GrlSource *source,
   grl_lua_library_set_current_operation (L, os->operation_id);
   lua_getglobal (L, LUA_SOURCE_OPERATION[LUA_BROWSE]);
 
-  media_id = grl_media_get_id (os->media);
   lua_pushstring (L, media_id);
   if (lua_pcall (L, 1, 0, 0)) {
     GRL_WARNING ("%s '%s'", "calling browse function fail:",
@@ -1050,11 +1072,14 @@ grl_lua_factory_source_query (GrlSource *source,
 
   GRL_DEBUG ("grl_lua_factory_source_query");
 
+  query = (qs->query == NULL) ? "" : qs->query;
+
   os = g_slice_new0 (OperationSpec);
   os->source = qs->source;
   os->operation_id = qs->operation_id;
   os->cb.result = qs->callback;
   os->user_data = qs->user_data;
+  os->string = g_strdup (query);
   os->error_code = GRL_CORE_ERROR_QUERY_FAILED;
   os->keys = g_list_copy (qs->keys);
   os->options = grl_operation_options_copy (qs->options);
@@ -1064,7 +1089,6 @@ grl_lua_factory_source_query (GrlSource *source,
   grl_lua_library_set_current_operation (L, os->operation_id);
   lua_getglobal (L, LUA_SOURCE_OPERATION[LUA_QUERY]);
 
-  query = (qs->query == NULL) ? "" : qs->query;
   lua_pushstring (L, query);
   if (lua_pcall (L, 1, 0, 0)) {
     GRL_WARNING ("%s '%s'", "calling query function fail:",
@@ -1133,7 +1157,8 @@ grl_lua_factory_source_may_resolve (GrlSource *source,
 
   /* Verify if the source resolve type and media type match */
   res_type = lua_source->priv->resolve_type;
-  if ((GRL_IS_MEDIA_AUDIO (media) && !(res_type & GRL_MEDIA_TYPE_AUDIO))
+  if ((GRL_IS_MEDIA_BOX (media) && (res_type != GRL_MEDIA_TYPE_ALL))
+      || (GRL_IS_MEDIA_AUDIO (media) && !(res_type & GRL_MEDIA_TYPE_AUDIO))
       || (GRL_IS_MEDIA_IMAGE (media) && !(res_type & GRL_MEDIA_TYPE_IMAGE))
       || (GRL_IS_MEDIA_VIDEO (media) && !(res_type & GRL_MEDIA_TYPE_VIDEO))) {
     return FALSE;

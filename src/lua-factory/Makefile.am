@@ -5,6 +5,8 @@
 #
 # Copyright (C) 2013 Victor Toso. All rights reserved.
 
+include $(top_srcdir)/gtester.mk
+
 SUBDIRS = sources
 
 ext_LTLIBRARIES = libgrlluafactory.la
@@ -33,7 +35,7 @@ extdir			= $(GRL_PLUGINS_DIR)
 luafactoryxmldir	= $(GRL_PLUGINS_DIR)
 luafactoryxml_DATA	= $(LUA_FACTORY_PLUGIN_ID).xml
 
-EXTRA_DIST = $(luafactoryxml_DATA)
+EXTRA_DIST += $(luafactoryxml_DATA)
 
 DIST_SUBDIRS = sources
 

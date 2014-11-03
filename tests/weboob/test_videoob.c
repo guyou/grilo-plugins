@@ -30,7 +30,7 @@
 #include <../../src/weboob/videoob.h>
 
 static void
-test_ls ()
+test_ls (void)
 {
   GList *medias;
   GError *error;
@@ -60,7 +60,7 @@ dump_backend (gpointer data,
 }
 
 static void
-test_backends ()
+test_backends (void)
 {
   GList *backends;
   GError *error;

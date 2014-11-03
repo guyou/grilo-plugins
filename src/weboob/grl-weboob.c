@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "videoob.h"
+#include "weboob.h"
 
 #include "grl-weboob-shared.h"
 #include "grl-weboob.h"
@@ -201,7 +202,7 @@ grl_weboob_plugin_init (GrlRegistry *registry,
     type = grl_config_get_string (config, "backends");
   }
 
-  backends = videoob_backends (&error);
+  backends = weboob_modules ("CapVideo", &error);
   if (backends != NULL) {
 
     if (strcmp (type, "both") == 0 ||
@@ -505,10 +506,10 @@ result_cb (GObject      *source_object,
     g_list_free (medias);
     
     /* next */
-    videoob_read_async (dis, G_PRIORITY_DEFAULT,
-                        os->cancellable,
-                        result_cb,
-                        os);
+    weboob_read_async (dis, G_PRIORITY_DEFAULT,
+                       os->cancellable,
+                       result_cb,
+                       os);
   } else {
     /* Nothing more */
     g_input_stream_close (G_INPUT_STREAM (dis), NULL, NULL);
@@ -567,10 +568,10 @@ grl_weboob_source_search (GrlSource *source,
 
   backend = GRL_WEBOOB_SOURCE_GET_PRIVATE (source)->backend;
   dis = videoob_search (backend, os->count, ss->text, &error);
-  videoob_read_async (dis, G_PRIORITY_DEFAULT,
-                      os->cancellable,
-                      result_cb,
-                      os);
+  weboob_read_async (dis, G_PRIORITY_DEFAULT,
+                     os->cancellable,
+                     result_cb,
+                     os);
   g_object_unref (dis);
 
   operation_spec_unref (os);
@@ -614,10 +615,10 @@ grl_weboob_source_browse (GrlSource *source,
 
   backend = GRL_WEBOOB_SOURCE_GET_PRIVATE (source)->backend;
   dis = videoob_ls (backend, os->count, container_id, &error);
-  videoob_read_async (dis, G_PRIORITY_DEFAULT,
-                      os->cancellable,
-                      result_cb,
-                      os);
+  weboob_read_async (dis, G_PRIORITY_DEFAULT,
+                     os->cancellable,
+                     result_cb,
+                     os);
   g_object_unref (dis);
 
   operation_spec_unref (os);
@@ -685,10 +686,10 @@ grl_weboob_source_resolve (GrlSource *source,
 
     backend = GRL_WEBOOB_SOURCE_GET_PRIVATE (source)->backend;
     dis = videoob_info (backend, id, &error);
-    videoob_read_async (dis, G_PRIORITY_DEFAULT,
-                        cancellable,
-                        resolve_cb,
-                        rs);
+    weboob_read_async (dis, G_PRIORITY_DEFAULT,
+                       cancellable,
+                       resolve_cb,
+                       rs);
     g_object_unref (dis);
 
     return;

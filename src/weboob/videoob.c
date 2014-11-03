@@ -34,6 +34,7 @@
 
 #include "grl-weboob-shared.h"
 
+#include "weboob.h"
 #include "videoob.h"
 
 #define VIDEOOB_COMMAND "videoob"
@@ -102,32 +103,6 @@ ze": null, "rating": null, "rating_max": null, "nsfw": false, "thumbnail": null,
  * "duration": "0:00:45"
  */
 
-static gchar *
-videoob_node_get_string (JsonNode *node, const gchar *pattern)
-{
-  gchar * id = NULL;
-  JsonNode *matches;
-  JsonNode *match;
-  JsonArray *results;
-  gint len;
-  GError *error = NULL;
-  
-  matches = json_path_query (pattern, node, &error);
-
-  /* FIXME checks on matches */
-  results = json_node_get_array (matches);
-  len = json_array_get_length (results);  
-  
-  if (len > 0) {
-    match = json_array_get_element (results, 0);
-    id = json_node_dup_string (match);
-  }
-  
-  json_node_free (matches);
-  
-  return id;
-}
-
 static GrlMedia *
 build_media_from_node (GrlMedia *content, JsonNode *node)
 {
@@ -147,14 +122,14 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
     media = grl_media_video_new ();
   }
 
-  id = videoob_node_get_string (node, "$.id");
-  title = videoob_node_get_string (node, "$.title");
-  author = videoob_node_get_string (node, "$.author");
-  url = videoob_node_get_string (node, "$.url");
-  desc = videoob_node_get_string (node, "$.description");
-  date = videoob_node_get_string (node, "$.date");
-  thumbnail = videoob_node_get_string (node, "$.thumbnail.url");
-  duration = videoob_node_get_string (node, "$.duration");
+  id = weboob_node_get_string (node, "$.id");
+  title = weboob_node_get_string (node, "$.title");
+  author = weboob_node_get_string (node, "$.author");
+  url = weboob_node_get_string (node, "$.url");
+  desc = weboob_node_get_string (node, "$.description");
+  date = weboob_node_get_string (node, "$.date");
+  thumbnail = weboob_node_get_string (node, "$.thumbnail.url");
+  duration = weboob_node_get_string (node, "$.duration");
 
   grl_media_set_id (media, id);
   grl_media_set_title (media, title);
@@ -224,19 +199,6 @@ build_medias_from_json (const gchar *line, GError **error)
   g_object_unref (parser);
   
   return medias;
-}
-
-void
-videoob_read_async (GDataInputStream *dis,
-                    int io_priority,
-                    GCancellable *cancellable,
-                    GAsyncReadyCallback callback,
-                    gpointer user_data)
-{
-  g_data_input_stream_read_line_async (dis, G_PRIORITY_DEFAULT,
-                                       cancellable,
-                                       callback,
-                                       user_data);
 }
 
 GList *
@@ -333,6 +295,10 @@ videoob_run (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
+  gchar *arguments = g_strjoinv (" ", args);
+  GRL_DEBUG ("Running %s...", arguments);
+  g_free (arguments);
+
   /* Spawn command */
   process = g_subprocess_newv (args, G_SUBPROCESS_FLAGS_STDOUT_PIPE, error);
 
@@ -422,44 +388,10 @@ videoob_info (const gchar *backend,
 
   return videoob_run (backend, 1, args, error);
 }
-
+ 
 GList *
 videoob_backends (GError **error)
 {
-  GList *backends = NULL;
-  GDataInputStream *dis;
-  gchar **backend = NULL;
-  const gchar *args[64];
-  int i = 0;
-  gchar *line;
-  
-  GRL_DEBUG ("%s ", __FUNCTION__);
-  
-  args[i++] = "backends";
-  
-  args[i++] = "list-modules";
-
-  /* End of args */
-  args[i++] = NULL;
-
-  dis = videoob_run (backend, 1, args, error);
-
-  if (dis != NULL) {
-    while ((line = g_data_input_stream_read_line (dis, NULL, NULL, error)) != NULL
-           && *error == NULL) {
-      if (line[0] == '[') {
-        if (line[1] == 'X' || g_ascii_isdigit (line[1])) {
-          /* Split line in two */
-          backend = g_strsplit (line + 4, " ", 2);
-          /* Remove leading spaces */
-          backend[1] = g_strchug (backend[1]);
-          /* Store result */
-          backends = g_list_append (backends, backend);
-        }
-      }
-      g_free (line);
-    }
-  }
-  
-  return backends;
+  return weboob_modules ("CapVideo", error);
 }
+

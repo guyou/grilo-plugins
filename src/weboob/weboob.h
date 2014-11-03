@@ -18,21 +18,26 @@
  *
  */
 
-#ifndef _VIDEOOB_SOURCE_H_
-#define _VIDEOOB_SOURCE_H_
+#ifndef _WEBOOB_SOURCE_H_
+#define _WEBOOB_SOURCE_H_
 
 #include <gio/gio.h>
+#include <json-glib/json-glib.h>
 
-GList *videoob_backends (GError **error);
+gchar *weboob_node_get_string (JsonNode *node, const gchar *pattern);
 
-GDataInputStream *videoob_ls (const gchar *backend, int count, const gchar *dir, GError **error);
+void weboob_read_async (GDataInputStream *dis,
+                        int io_priority,
+                        GCancellable *cancellable,
+                        GAsyncReadyCallback callback,
+                        gpointer user_data);
 
-GDataInputStream *videoob_search (const gchar *backend, int count, const gchar *pattern, GError **error);
+GDataInputStream *weboob_run (const gchar *command,
+                              int count,
+                              const gchar **argv,
+                              GError **error);
 
-GDataInputStream *videoob_info (const gchar *backend, const gchar *uri, GError **error);
-
-GList *videoob_read_finish (GDataInputStream *dis,
-                            GAsyncResult *res,
-                            GError **error);
+GList *weboob_modules (const gchar* cap,
+                       GError **error);
 
 #endif /* _GRL_VIDEOOB_SOURCE_H_ */

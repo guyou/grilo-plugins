@@ -26,6 +26,7 @@ libgrlweboob_la_SOURCES = \
   grl-weboob-shared.h \
   grl-weboob.c grl-weboob.h \
   videoob.h videoob.c \
+  weboob.h weboob.c \
   weboobresources.h weboobresources.c
 
 extdir				= $(GRL_PLUGINS_DIR)

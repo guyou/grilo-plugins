@@ -50,39 +50,6 @@ parse_duration (const gchar *sduration)
   return hours*60*60 + minutes*60 + seconds;
 }
 
-static GrlMedia *
-build_media_box_from_entry (const char *line)
-{
-  GrlMedia *box;
-  gchar *id = NULL;
-  gchar *title = NULL;
-  gchar *ptr = NULL;
-  gint len = 0;
-  
-  box = grl_media_box_new ();
-  
-  /* parse line */
-  id = strchr (line, '(');
-  if (id) {
-    /* Id */
-    id = id + 1;
-    ptr = strchr (id, ')');
-    len = ptr - id;
-    id = g_strndup (id, len);
-    
-    /* Title */
-    title = g_strdup (ptr + 2);
-  }
-
-  grl_media_set_id (box, id);
-  grl_media_set_title (box, title);
-
-  g_free (id);
-  g_free (title);
-  
-  return box;
-}
-
 /* Result example:
  * 
  * "id": "3qVJLOK_zao@youtube"
@@ -109,6 +76,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   GrlMedia *media = NULL;
   gchar *id;
   gchar *title;
+  gchar *path;
   gchar *url;
   gchar *author;
   gchar *desc;
@@ -116,20 +84,27 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   gchar *thumbnail;
   gchar *duration;
 
-  if (content) {
-    media = content;
-  } else {
-    media = grl_media_video_new ();
-  }
-
   id = weboob_node_get_string (node, "$.id");
   title = weboob_node_get_string (node, "$.title");
+  path = weboob_node_get_string (node, "$.split_path");
   author = weboob_node_get_string (node, "$.author");
   url = weboob_node_get_string (node, "$.url");
   desc = weboob_node_get_string (node, "$.description");
   date = weboob_node_get_string (node, "$.date");
   thumbnail = weboob_node_get_string (node, "$.thumbnail.url");
   duration = weboob_node_get_string (node, "$.duration");
+
+  if (content) {
+    // Update
+    media = content;
+  } if (NULL != path) {
+    media = grl_media_box_new ();
+    grl_media_box_set_childcount (GRL_MEDIA_BOX (media),
+                                  GRL_METADATA_KEY_CHILDCOUNT_UNKNOWN);
+    grl_media_set_url (media, path);
+  } else {
+    media = grl_media_video_new ();
+  }
 
   grl_media_set_id (media, id);
   grl_media_set_title (media, title);
@@ -207,7 +182,6 @@ videoob_read_finish (GDataInputStream *dis,
                      GError **error)
 {
   GList *medias = NULL;
-  GrlMedia *media;
   gchar *line = NULL;
 
   GRL_DEBUG ("%s: is closed %d", __FUNCTION__, g_input_stream_is_closed (dis));
@@ -216,10 +190,7 @@ videoob_read_finish (GDataInputStream *dis,
   GRL_DEBUG ("%s: read %s", __FUNCTION__, line);
 
   if (NULL != line && NULL == *error) {
-    if ('~' == line[0]) {
-      media = build_media_box_from_entry (line);
-      medias = g_list_prepend (medias, media);
-    } else if ('[' == line[0]) {
+    if ('[' == line[0]) {
       medias = build_medias_from_json (line, error);
     }
   }

@@ -588,6 +588,7 @@ grl_weboob_source_browse (GrlSource *source,
   OperationSpec *os;
   GDataInputStream *dis;
   const gchar *container_id;
+  const gchar *url;
   gchar *backend;
   GError *error = NULL;
 
@@ -598,6 +599,7 @@ grl_weboob_source_browse (GrlSource *source,
              grl_operation_options_get_count (bs->options));
 
   container_id = grl_media_get_id (bs->container);
+  url = grl_media_get_url (bs->container);
 
   os = operation_spec_new ();
   os->source = bs->source;
@@ -618,7 +620,7 @@ grl_weboob_source_browse (GrlSource *source,
   grl_operation_set_data (bs->operation_id, os->cancellable);
 
   backend = GRL_WEBOOB_SOURCE_GET_PRIVATE (source)->backend;
-  dis = videoob_ls (backend, os->count, container_id, &error);
+  dis = videoob_ls (backend, os->count, url, &error);
   weboob_read_async (dis, G_PRIORITY_DEFAULT,
                      os->cancellable,
                      result_cb,

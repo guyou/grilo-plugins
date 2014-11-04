@@ -175,7 +175,7 @@ grl_weboob_plugin_init (GrlRegistry *registry,
                         GrlPlugin *plugin,
                         GList *configs)
 {
-  gchar *type = "both";
+  gchar *type = NULL;
   GrlConfig *config;
   gint config_count;
   GrlWeboobSource *source;
@@ -200,6 +200,10 @@ grl_weboob_plugin_init (GrlRegistry *registry,
 
     config = GRL_CONFIG (configs->data);
     type = grl_config_get_string (config, "backends");
+  }
+  
+  if (NULL == type) {
+    type = g_strdup ("both");
   }
 
   backends = weboob_modules ("CapVideo", &error);

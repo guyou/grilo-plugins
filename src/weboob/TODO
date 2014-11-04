@@ -4,3 +4,6 @@
 - provide a source per videoob backend
 - use a single and persistent instance of videoob
 - add support for queries (-c option of videoob)
+
+Bugs
+- inconsistency when browsing with "all" backends: if latest is selected graphically, the user select only Youtube's latest entry, but it fetch all

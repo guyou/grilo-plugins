@@ -219,6 +219,7 @@ videoob_wait_cb (GObject      *source_object,
 static GDataInputStream *
 videoob_run (const gchar *backend,
              int count,
+             const gchar *select,
              const gchar **argv,
              GError **error)
 {
@@ -230,7 +231,7 @@ videoob_run (const gchar *backend,
   GInputStream *is;
   GDataInputStream *dis;
 
-  dis = weboob_run (VIDEOOB_COMMAND, backend, count, argv, error);
+  dis = weboob_run (VIDEOOB_COMMAND, backend, count, select, argv, error);
 
   return dis;
 }
@@ -258,7 +259,8 @@ videoob_ls (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  return videoob_run (backend, count, args, error);
+  /* Compute all data */
+  return videoob_run (backend, count, "$full", args, error);
 }
 
 GDataInputStream *
@@ -282,7 +284,7 @@ videoob_search (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  return videoob_run (backend, count, args, error);
+  return videoob_run (backend, count, "$full", args, error);
 }
 
 GDataInputStream *
@@ -305,7 +307,7 @@ videoob_info (const gchar *backend,
   /* End of args */
   args[i++] = NULL;
 
-  return videoob_run (backend, 1, args, error);
+  return videoob_run (backend, 1, NULL, args, error);
 }
  
 GList *

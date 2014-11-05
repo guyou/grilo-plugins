@@ -76,11 +76,19 @@ weboob_read_async (GDataInputStream *dis,
                                        user_data);
 }
 
-
+/**
+ * weboob_run:
+ * @command: the command (exec) to launch
+ * @backend: the backend to filter on or NULL for not filtering
+ * @count: the number of result expected
+ * @select: the field to select or "$full" for all
+ * @argv: the rest of the command
+ */
 GDataInputStream *
 weboob_run (const gchar *command,
             const gchar *backend,
             int count,
+            const gchar *select,
             const gchar **argv,
             GError **error)
 {
@@ -113,6 +121,12 @@ weboob_run (const gchar *command,
     args[i++] = scount;
   }
 
+  /* Select */
+  if (NULL != select) {
+    args[i++] = "-s";
+    args[i++] = select;
+  }
+  
   /* JSON format */
   args[i++] = "-f";
   args[i++] = "json";
@@ -225,7 +239,7 @@ weboob_modules (const gchar* cap,
   /* End of args */
   args[i++] = NULL;
 
-  dis = weboob_run ("weboob-config", NULL, -1, args, error);
+  dis = weboob_run ("weboob-config", NULL, -1, NULL, args, error);
 
   if (dis != NULL) {
     while ((line = g_data_input_stream_read_line (dis, NULL, NULL, error)) != NULL

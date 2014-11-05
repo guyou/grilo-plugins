@@ -79,6 +79,7 @@ weboob_read_async (GDataInputStream *dis,
 
 GDataInputStream *
 weboob_run (const gchar *command,
+            const gchar *backend,
             int count,
             const gchar **argv,
             GError **error)
@@ -96,6 +97,12 @@ weboob_run (const gchar *command,
   /* Consolidate arguments */
   args[i++] = command;
 
+  /* Backend */
+  if (NULL != backend) {
+    args[i++] = "-b";
+    args[i++] = backend;
+  }
+  
   /* Result count */
   if (-1 != count) {
     args[i++] = "-n";
@@ -218,7 +225,7 @@ weboob_modules (const gchar* cap,
   /* End of args */
   args[i++] = NULL;
 
-  dis = weboob_run ("weboob-config", -1, args, error);
+  dis = weboob_run ("weboob-config", NULL, -1, args, error);
 
   if (dis != NULL) {
     while ((line = g_data_input_stream_read_line (dis, NULL, NULL, error)) != NULL

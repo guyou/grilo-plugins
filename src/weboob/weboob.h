@@ -33,6 +33,7 @@ void weboob_read_async (GDataInputStream *dis,
                         gpointer user_data);
 
 GDataInputStream *weboob_run (const gchar *command,
+                              const gchar *backend,
                               int count,
                               const gchar **argv,
                               GError **error);

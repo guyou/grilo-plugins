@@ -230,60 +230,8 @@ videoob_run (const gchar *backend,
   GInputStream *is;
   GDataInputStream *dis;
 
-  GRL_DEBUG ("Running %s %s...", VIDEOOB_COMMAND, argv[0]);
+  dis = weboob_run (VIDEOOB_COMMAND, backend, count, argv, error);
 
-  /* Consolidate arguments */
-  args[i++] = VIDEOOB_COMMAND;
-
-  /* Backend */
-  if (NULL != backend) {
-    args[i++] = "-b";
-    args[i++] = backend;
-  }
-  
-  /* Result count */
-  if (-1 != count) {
-    args[i++] = "-n";
-    /* We use a raw char buffer in order to avoid allocating and
-     * deallocating memory for this conversion.
-     */
-    g_snprintf (scount, 64-1, "%d", count);
-    args[i++] = scount;
-  }
-
-  /* JSON format */
-  args[i++] = "-f";
-  args[i++] = "json";
-
-  /* Run quiet */
-  args[i++] = "-q";
-  
-  /* Copy remaining (and specific) args */
-  for (j=0 ; NULL != argv && NULL != argv[j] ; j++) {
-    args[i++] = argv[j];
-  }
-  
-  /* End of args */
-  args[i++] = NULL;
-
-  gchar *arguments = g_strjoinv (" ", args);
-  GRL_DEBUG ("Running %s...", arguments);
-  g_free (arguments);
-
-  /* Spawn command */
-  process = g_subprocess_newv (args, G_SUBPROCESS_FLAGS_STDOUT_PIPE, error);
-
-  if (!process)
-  {
-    g_error ("SPAWN FAILED");
-    return NULL;
-  }
-
-  is = g_subprocess_get_stdout_pipe (process);
-  dis = g_data_input_stream_new (is);
-
-  g_object_unref (process);
-  
   return dis;
 }
 

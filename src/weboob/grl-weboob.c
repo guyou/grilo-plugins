@@ -251,14 +251,11 @@ grl_weboob_source_new (const gchar *id,
 {
   GrlWeboobSource *source;
   GIcon *icon;
-  GFile *file;
 
   GRL_DEBUG ("%s ( %s, %s, %s, %s )",
              __FUNCTION__, id, name, desc, backend);
 
-  file = g_file_new_for_uri ("resource:///org/gnome/grilo/plugins/weboob/weboob.png");
-  icon = g_file_icon_new (file);
-  g_object_unref (file);
+  icon = weboob_module_get_icon (backend);
 
   source = GRL_WEBOOB_SOURCE (g_object_new (GRL_WEBOOB_SOURCE_TYPE,
                                             "source-id", id,

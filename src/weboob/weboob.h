@@ -39,7 +39,9 @@ GDataInputStream *weboob_run (const gchar *command,
                               const gchar **argv,
                               GError **error);
 
-GList *weboob_modules (const gchar* cap,
+GList *weboob_modules (const gchar *cap,
                        GError **error);
+
+GIcon *weboob_module_get_icon (const gchar *backend);
 
 #endif /* _GRL_VIDEOOB_SOURCE_H_ */

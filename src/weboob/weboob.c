@@ -254,3 +254,35 @@ weboob_modules (const gchar* cap,
   return backends;
 
 }
+
+GIcon *weboob_module_get_icon (const gchar *backend)
+{
+  const gchar *user_data_dir;
+  gchar *path;
+  gchar *filename;
+  GIcon *icon = NULL;
+  GFile *file = NULL;
+
+  if (NULL != backend) {
+    user_data_dir = g_get_user_data_dir ();
+    filename = g_strdup_printf ("%s.png", backend);
+    path = g_build_filename (user_data_dir, "weboob", "icons", filename,
+                             NULL);
+    GRL_DEBUG ("%s: looking for icon %s", __FUNCTION__, path);
+    file = g_file_new_for_path (path);
+    icon = g_file_icon_new (file);
+    g_object_unref (file);
+    g_free (filename);
+    g_free (path);
+    user_data_dir = NULL; /* Should not be freed */
+  }
+  
+  if (NULL == icon) {
+    // Default
+    file = g_file_new_for_uri ("resource:///org/gnome/grilo/plugins/weboob/weboob.png");
+    icon = g_file_icon_new (file);
+    g_object_unref (file);
+  }
+
+  return icon;
+}

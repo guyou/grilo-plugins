@@ -1,7 +1,5 @@
-- render videoob operations async
 - add support for audio (http://weboob.org/applications/radioob)
 - add support for images (?)
-- provide a source per videoob backend
 - use a single and persistent instance of videoob
 - add support for queries (-c option of videoob)
 

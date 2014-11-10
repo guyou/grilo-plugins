@@ -176,6 +176,16 @@ build_medias_from_json (const gchar *line, GError **error)
   return medias;
 }
 
+/**
+ * videoob_read_finish:
+ * @dis: input stream to process
+ * @res: async result
+ * @error:
+ * 
+ * Process an input stream to extract Media.
+ * 
+ * Returns: a list of GrlMedia.
+ */
 GList *
 videoob_read_finish (GDataInputStream *dis,
                      GAsyncResult *res,
@@ -236,6 +246,17 @@ videoob_run (const gchar *backend,
   return dis;
 }
 
+/**
+ * videoob_ls:
+ * @backend: selected backend
+ * @count: number of result expected
+ * @dir: current directory to list
+ * @error:
+ * 
+ * List content of a given directory.
+ * 
+ * Returns: a GDataInputStream to process with videoob_read_finish
+ */
 GDataInputStream *
 videoob_ls (const gchar *backend,
             int count,
@@ -263,6 +284,17 @@ videoob_ls (const gchar *backend,
   return videoob_run (backend, count, "$full", args, error);
 }
 
+/**
+ * videoob_search:
+ * @backend: selected backend
+ * @count: number of result expected
+ * @pattern: pattern to search for
+ * @error:
+ * 
+ * Search for video matching a given pattern.
+ * 
+ * Returns: a GDataInputStream to process with videoob_read_finish
+ */
 GDataInputStream *
 videoob_search (const gchar *backend,
                 int count,
@@ -287,6 +319,16 @@ videoob_search (const gchar *backend,
   return videoob_run (backend, count, "$full", args, error);
 }
 
+/**
+ * videoob_info:
+ * @backend: selected backend
+ * @uri: uri of the media
+ * @error:
+ * 
+ * Fetch informations about given media.
+ * 
+ * Returns: a GDataInputStream to process with videoob_read_finish
+ */
 GDataInputStream *
 videoob_info (const gchar *backend,
               const gchar *uri,
@@ -309,7 +351,15 @@ videoob_info (const gchar *backend,
 
   return videoob_run (backend, 1, NULL, args, error);
 }
- 
+
+/**
+ * videoob_backends:
+ * @error:
+ * 
+ * List of backends.
+ * 
+ * Returns: list of backends as couple of strings.
+ */
 GList *
 videoob_backends (GError **error)
 {

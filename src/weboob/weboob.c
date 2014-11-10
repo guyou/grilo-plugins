@@ -36,7 +36,15 @@
 
 #include "weboob.h"
 
-
+/**
+ * weboob_node_get_string:
+ * @node: JSon node
+ * @pattern: pattern representing the requested field
+ * 
+ * Retrieve a given field in a JSon node.
+ * 
+ * Returns: a string or NULL if not found.
+ */
 gchar *
 weboob_node_get_string (JsonNode *node, const gchar *pattern)
 {
@@ -63,6 +71,9 @@ weboob_node_get_string (JsonNode *node, const gchar *pattern)
   return id;
 }
 
+/**
+ * weboob_read_async:
+ */
 void
 weboob_read_async (GDataInputStream *dis,
                     int io_priority,
@@ -83,6 +94,10 @@ weboob_read_async (GDataInputStream *dis,
  * @count: the number of result expected
  * @select: the field to select or "$full" for all
  * @argv: the rest of the command
+ * 
+ * Fire a weboob command.
+ * 
+ * Returns: the associated GDataInputStream
  */
 GDataInputStream *
 weboob_run (const gchar *command,
@@ -219,6 +234,15 @@ build_modules_from_json (const gchar *line, GError **error)
   return medias;
 }
 
+/**
+ * weboob_modules:
+ * @cap: capability searched
+ * @error:
+ * 
+ * List all modules implementing the given capability.
+ * 
+ * Returns: a list of strings
+ */
 GList *
 weboob_modules (const gchar* cap,
                 GError **error)
@@ -255,7 +279,16 @@ weboob_modules (const gchar* cap,
 
 }
 
-GIcon *weboob_module_get_icon (const gchar *backend)
+/**
+ * weboob_module_get_icon:
+ * @backend: selected backend
+ * 
+ * Retrieve an icon for a given backend.
+ * 
+ * Returns: the backend's icon or the weboob's one as default.
+ */
+GIcon *
+weboob_module_get_icon (const gchar *backend)
 {
   const gchar *user_data_dir;
   gchar *path;

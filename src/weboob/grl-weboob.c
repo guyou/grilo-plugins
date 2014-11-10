@@ -155,14 +155,14 @@ static void
 add_backend (gpointer data,
              gpointer user_data)
 {
-  gchar **backend = (gchar**) data;
+  gchar *backend = (gchar*) data;
   GrlRegistry *registry = (GrlRegistry*) user_data;
   GrlPlugin *plugin = NULL;
   GrlWeboobSource *source;
 
   plugin = grl_registry_lookup_plugin (registry, WEBOOB_PLUGIN_ID);
 
-  source = grl_weboob_source_new_backend (backend[0], backend[1]);
+  source = grl_weboob_source_new_backend (backend, NULL);
 
   grl_registry_register_source (registry,
                                 plugin,
@@ -206,7 +206,7 @@ grl_weboob_plugin_init (GrlRegistry *registry,
     type = g_strdup ("both");
   }
 
-  backends = weboob_modules ("CapVideo", &error);
+  backends = videoob_backends(&error);
   if (backends != NULL) {
 
     if (strcmp (type, "both") == 0 ||
@@ -223,10 +223,16 @@ grl_weboob_plugin_init (GrlRegistry *registry,
     if (strcmp (type, "both") == 0 ||
         strcmp (type, "backends") == 0) {
       /* A source for each backend */
-      g_list_foreach (backends, add_backend, registry);
+      gchar **backends_iter = backends;
+      while (*backends_iter != NULL) {
+        add_backend (*backends_iter, registry);
+        
+        /* Next */
+        backends_iter++;
+      }
     }
     
-    g_list_free_full (backends, (GDestroyNotify)g_strfreev);
+    g_strfreev (backends);
   }
   /* else videoob not present */
 

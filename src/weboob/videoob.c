@@ -358,11 +358,38 @@ videoob_info (const gchar *backend,
  * 
  * List of backends.
  * 
- * Returns: list of backends as couple of strings.
+ * Returns: list of backends as strings: newly allocated and NULL-terminated.
  */
-GList *
+gchar **
 videoob_backends (GError **error)
 {
-  return weboob_modules ("CapVideo", error);
+  GDataInputStream *dis;
+  gchar **backends = NULL;
+  const gchar *args[64];
+  int i = 0;
+  gchar *line;
+
+  GRL_DEBUG ("%s ", __FUNCTION__);
+
+  args[i++] = "backends";
+
+  /* End of args */
+  args[i++] = NULL;
+
+  dis = videoob_run (NULL, 1, NULL, args, error);
+
+  if (dis != NULL) {
+    while ((line = g_data_input_stream_read_line (dis, NULL, NULL, error)) != NULL
+           && *error == NULL) {
+#define ENABLED_KEYWORD "Enabled:"
+      if (strncmp(line, ENABLED_KEYWORD, strlen(ENABLED_KEYWORD)) == 0) {
+        /* Split line */
+        backends = g_strsplit (line + strlen(ENABLED_KEYWORD) + 1, ", ", -1);
+      }
+      g_free (line);
+    }
+  }
+
+  return backends;
 }
 

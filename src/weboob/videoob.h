@@ -23,7 +23,7 @@
 
 #include <gio/gio.h>
 
-GList *videoob_backends (GError **error);
+gchar **videoob_backends (GError **error);
 
 GDataInputStream *videoob_ls (const gchar *backend, int count, const gchar *dir, GError **error);
 

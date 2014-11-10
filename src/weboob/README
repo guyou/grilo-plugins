@@ -1,0 +1,17 @@
+Dependencies
+============
+Needs weboob: http://weboob.org/
+
+Tested with weboob 1.0.
+
+Configuration
+=============
+
+By default, all available backends are declared as Grilo Source.
+Its possible to select the available backend via the configuration file.
+
+In "backends" configuration key, set the list of backends to activate.
+
+The "all" keyword allow to create a source accessing Weboob without filtering on a given backend.
+
+The "both" allow to have both a Grilo Source for all backends and all backends as unitary Grilo Source.

@@ -233,12 +233,6 @@ videoob_run (const gchar *backend,
              const gchar **argv,
              GError **error)
 {
-  GSubprocess *process;
-  const gchar *args[64];
-  int i = 0;
-  int j = 0;
-  gchar scount[64];
-  GInputStream *is;
   GDataInputStream *dis;
 
   dis = weboob_run (VIDEOOB_COMMAND, backend, count, select, argv, error);

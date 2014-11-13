@@ -468,7 +468,6 @@ grl_weboob_source_supported_keys (GrlSource *source)
                                       GRL_METADATA_KEY_DURATION,
                                       GRL_METADATA_KEY_PUBLICATION_DATE,
                                       GRL_METADATA_KEY_THUMBNAIL,
-                                      GRL_METADATA_KEY_CHILDCOUNT,
                                       GRL_METADATA_KEY_SITE,
                                       GRL_METADATA_KEY_RATING,
                                       GRL_METADATA_KEY_INVALID);

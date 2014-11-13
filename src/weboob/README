@@ -1,3 +1,10 @@
+Weboob is a tool to appreciate the "web outside of the browser".
+It allows to directly access data hosted in many online services.
+Such data can be weather data, bank account data... and also multimedia
+data like video, pictures and music.
+
+This plugin tries to expose the multimedia modules in the Grilo framework.
+
 Dependencies
 ============
 Needs weboob: http://weboob.org/

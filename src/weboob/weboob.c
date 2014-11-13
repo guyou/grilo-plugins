@@ -137,7 +137,7 @@ weboob_run (const gchar *command,
   }
 
   /* Select */
-  if (NULL != select) {
+  if (NULL != select && strlen (select) > 0) {
     args[i++] = "-s";
     args[i++] = select;
   }

@@ -179,7 +179,7 @@ grl_weboob_plugin_init (GrlRegistry *registry,
   GrlConfig *config;
   gint config_count;
   GrlWeboobSource *source;
-  GList *backends;
+  gchar **backends;
   GError *error = NULL;
 
   GRL_LOG_DOMAIN_INIT (weboob_log_domain, "weboob");

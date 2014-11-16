@@ -194,7 +194,8 @@ videoob_read_finish (GDataInputStream *dis,
   GList *medias = NULL;
   gchar *line = NULL;
 
-  GRL_DEBUG ("%s: is closed %d", __FUNCTION__, g_input_stream_is_closed (dis));
+  GRL_DEBUG ("%s: is closed %d", __FUNCTION__,
+             g_input_stream_is_closed (G_INPUT_STREAM (dis)));
 
   line = g_data_input_stream_read_line_finish (dis, res, NULL, error);
   GRL_DEBUG ("%s: read %s", __FUNCTION__, line);

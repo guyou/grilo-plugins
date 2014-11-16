@@ -225,7 +225,7 @@ build_modules_from_json (const gchar *line, GError **error)
   GRL_DEBUG ("Length: %d", len);
   for (i=0 ; i < len ; i++) {
     JsonNode *node = json_array_get_element (array, i);
-    gchar *media = build_module_from_node (node);
+    gchar **media = build_module_from_node (node);
     medias = g_list_prepend (medias, media);
   }
   

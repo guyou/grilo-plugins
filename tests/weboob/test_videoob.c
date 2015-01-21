@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2013 Igalia S.L.
+ * Copyright (C) 2014 Guilhem Bonnefille
  *
- * Author: Juan A. Suarez Romero <jasuarez@igalia.com>
+ * Author: Guilhem Bonnefille <guilhem.bonnefille@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -41,10 +41,10 @@ test_ls (void)
 
   medias = videoob_ls (NULL, 5, "latest", &error);
   printf ("ls: %d\n", g_list_length (medias));
-  
+
   medias = videoob_ls (NULL, 5, NULL, &error);
   printf ("ls: %d\n", g_list_length (medias));
-  
+
   if (error != NULL)
   {
     g_error("ls failed: %s", error->message);
@@ -65,7 +65,7 @@ test_backends (void)
   GList *backends;
   GError *error;
   error = NULL;
-  
+
   backends = videoob_backends (&error);
   printf ("%d backends\n", g_list_length (backends));
   g_list_foreach (backends, dump_backend, NULL);

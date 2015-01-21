@@ -1,9 +1,9 @@
 #
 # Makefile.am
 #
-# Author: Iago Toral Quiroga <itoral@igalia.com>
+# Author: Guilhem Bonnefille <guilhem.bonnefille@gmail.com>
 #
-# Copyright (C) 2010, 2011 Igalia S.L. All rights reserved.
+# Copyright (C) 2014, 2015 Guilhem Bonnefille
 
 include $(top_srcdir)/gtester.mk
 

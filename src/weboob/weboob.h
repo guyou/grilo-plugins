@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef _WEBOOB_SOURCE_H_
-#define _WEBOOB_SOURCE_H_
+#ifndef _WEBOOB_H_
+#define _WEBOOB_H_
 
 #include <gio/gio.h>
 #include <json-glib/json-glib.h>
@@ -44,4 +44,4 @@ GList *weboob_modules (const gchar *cap,
 
 GIcon *weboob_module_get_icon (const gchar *backend);
 
-#endif /* _GRL_VIDEOOB_SOURCE_H_ */
+#endif /* _WEBOOB_H_ */

@@ -40,9 +40,9 @@
  * weboob_node_get_string:
  * @node: JSon node
  * @pattern: pattern representing the requested field
- * 
+ *
  * Retrieve a given field in a JSon node.
- * 
+ *
  * Returns: a string or NULL if not found.
  */
 gchar *
@@ -54,20 +54,20 @@ weboob_node_get_string (JsonNode *node, const gchar *pattern)
   JsonArray *results;
   gint len;
   GError *error = NULL;
-  
+
   matches = json_path_query (pattern, node, &error);
 
   /* FIXME checks on matches */
   results = json_node_get_array (matches);
-  len = json_array_get_length (results); 
-  
+  len = json_array_get_length (results);
+
   if (len > 0) {
     match = json_array_get_element (results, 0);
     id = json_node_dup_string (match);
   }
-  
+
   json_node_free (matches);
-  
+
   return id;
 }
 
@@ -94,9 +94,9 @@ weboob_read_async (GDataInputStream *dis,
  * @count: the number of result expected
  * @select: the field to select or "$full" for all
  * @argv: the rest of the command
- * 
+ *
  * Fire a weboob command.
- * 
+ *
  * Returns: the associated GDataInputStream
  */
 GDataInputStream *
@@ -125,7 +125,7 @@ weboob_run (const gchar *command,
     args[i++] = "-b";
     args[i++] = backend;
   }
-  
+
   /* Result count */
   if (-1 != count) {
     args[i++] = "-n";
@@ -141,19 +141,19 @@ weboob_run (const gchar *command,
     args[i++] = "-s";
     args[i++] = select;
   }
-  
+
   /* JSON format */
   args[i++] = "-f";
   args[i++] = "json";
 
   /* Run quiet */
   args[i++] = "-q";
-  
+
   /* Copy remaining (and specific) args */
   for (j=0 ; NULL != argv && NULL != argv[j] ; j++) {
     args[i++] = argv[j];
   }
-  
+
   /* End of args */
   args[i++] = NULL;
 
@@ -174,7 +174,7 @@ weboob_run (const gchar *command,
   dis = g_data_input_stream_new (is);
 
   g_object_unref (process);
-  
+
   return dis;
 }
 
@@ -197,7 +197,7 @@ build_module_from_node (JsonNode *node)
   // Tranfered
   //g_free (name);
   //g_free (description);
-  
+
   return module;
 }
 
@@ -228,9 +228,9 @@ build_modules_from_json (const gchar *line, GError **error)
     gchar **media = build_module_from_node (node);
     medias = g_list_prepend (medias, media);
   }
-  
+
   g_object_unref (parser);
-  
+
   return medias;
 }
 
@@ -238,9 +238,9 @@ build_modules_from_json (const gchar *line, GError **error)
  * weboob_modules:
  * @cap: capability searched
  * @error:
- * 
+ *
  * List all modules implementing the given capability.
- * 
+ *
  * Returns: a list of strings
  */
 GList *
@@ -252,11 +252,11 @@ weboob_modules (const gchar* cap,
   const gchar *args[64];
   int i = 0;
   gchar *line;
-  
+
   GRL_DEBUG ("%s ", __FUNCTION__);
-  
+
   args[i++] = "modules";
-  
+
   if (NULL != cap)
     args[i++] = cap;
 
@@ -274,7 +274,7 @@ weboob_modules (const gchar* cap,
       g_free (line);
     }
   }
-  
+
   return backends;
 
 }
@@ -282,9 +282,9 @@ weboob_modules (const gchar* cap,
 /**
  * weboob_module_get_icon:
  * @backend: selected backend
- * 
+ *
  * Retrieve an icon for a given backend.
- * 
+ *
  * Returns: the backend's icon or the weboob's one as default.
  */
 GIcon *
@@ -309,7 +309,7 @@ weboob_module_get_icon (const gchar *backend)
     g_free (path);
     user_data_dir = NULL; /* Should not be freed */
   }
-  
+
   if (NULL == icon) {
     // Default
     file = g_file_new_for_uri ("resource:///org/gnome/grilo/plugins/weboob/weboob.png");

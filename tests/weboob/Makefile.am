@@ -26,7 +26,7 @@ test_videoob_LDADD =	\
 test_videoob_CFLAGS =	\
 	$(test_videoob_defines)
 
-test_weboob_defines =                                              \
+test_weboob_defines =                                               \
    -DWEBOOB_PLUGIN_PATH=\""$(abs_top_builddir)/src/weboob/.libs/"\" \
    -DWEBOOB_DATA_PATH=\""$(abs_top_srcdir)/tests/weboob/data/"\"
 

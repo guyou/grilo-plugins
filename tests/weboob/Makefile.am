@@ -1,9 +1,9 @@
 #
 # Makefile.am
 #
-# Author: Juan A. Suarez Romero <jasuarez@igalia.com>
+# Author: Guilhem Bonnefille <guilhem.bonnefille@gmail.com>
 #
-# Copyright (C) 2013 Igalia S.L.
+# Copyright (C) 2014 Guilhem Bonnefille
 
 include $(top_srcdir)/gtester.mk
 

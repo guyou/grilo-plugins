@@ -1287,7 +1287,7 @@ AC_ARG_ENABLE([tmdb],
                       ])
                ])],
         [
-         AS_IF([test "x$HAVE_JSON_GLIB" = "xyes" -a "x$HAVE_GRLNET" = "xyes"],
+         AS_IF([test "x$HAVE_JSON_GLIB" = "xyes" -a "x$HAVE_GRLNET" = "xyes" -a "x$HAVE_LIBSOUP" = "xyes"],
                [enable_tmdb=yes],
                [enable_tmdb=no])
         ]

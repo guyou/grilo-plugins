@@ -481,7 +481,7 @@ grl_weboob_source_slow_keys (GrlSource *source)
   static GList *keys = NULL;
   if (!keys) {
     keys = grl_metadata_key_list_new (GRL_METADATA_KEY_URL,
-                                      NULL);
+                                      GRL_METADATA_KEY_INVALID);
   }
   return keys;
 }

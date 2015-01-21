@@ -760,5 +760,3 @@ grl_weboob_source_cancel (GrlSource *source,
     g_cancellable_cancel (cancellable);
   }
 }
-
-// https://developer.gnome.org/gio/unstable/GUnixInputStream.html#g-unix-input-stream-new

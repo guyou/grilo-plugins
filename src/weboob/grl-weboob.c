@@ -715,7 +715,7 @@ grl_weboob_test_media_from_uri (GrlSource *source, const gchar *uri)
 
   GRL_DEBUG (__FUNCTION__);
 
-  /* FIXME */
+  /* TODO */
 
   return ok;
 }
@@ -743,7 +743,7 @@ grl_weboob_get_media_from_uri (GrlSource *source,
   cancellable = g_cancellable_new ();
   grl_operation_set_data (mfus->operation_id, cancellable);
 
-  /* FIXME */
+  /* TODO */
 }
 
 static void

@@ -1,5 +1,6 @@
 - add support for audio (http://weboob.org/applications/radioob)
 - add support for images (?)
+- add support for testing media url
 - use a single and persistent instance of videoob
 - add support for queries (-c option of videoob)
 

@@ -194,7 +194,7 @@ build_module_from_node (JsonNode *node)
   module[1] = description;
   module[2] = NULL;
 
-  // Tranfered
+  // Transfered
   //g_free (name);
   //g_free (description);
 

@@ -51,7 +51,7 @@ parse_duration (const gchar *sduration)
 }
 
 /* Result example:
- * 
+ *
  * "id": "3qVJLOK_zao@youtube"
  * "title": "GNOME Shell 3.8 search redesign"
  * "url": null
@@ -139,7 +139,7 @@ build_media_from_node (GrlMedia *content, JsonNode *node)
   g_free (date);
   g_free (thumbnail);
   g_free (duration);
-  
+
   return media;
 }
 
@@ -170,9 +170,9 @@ build_medias_from_json (const gchar *line, GError **error)
     GrlMedia *media = build_media_from_node (NULL, node);
     medias = g_list_prepend (medias, media);
   }
-  
+
   g_object_unref (parser);
-  
+
   return medias;
 }
 
@@ -181,9 +181,9 @@ build_medias_from_json (const gchar *line, GError **error)
  * @dis: input stream to process
  * @res: async result
  * @error:
- * 
+ *
  * Process an input stream to extract Media.
- * 
+ *
  * Returns: a list of GrlMedia.
  */
 GList *
@@ -205,9 +205,9 @@ videoob_read_finish (GDataInputStream *dis,
       medias = build_medias_from_json (line, error);
     }
   }
-  
+
   g_free (line);
-  
+
   return medias;
 }
 
@@ -247,9 +247,9 @@ videoob_run (const gchar *backend,
  * @count: number of result expected
  * @dir: current directory to list
  * @error:
- * 
+ *
  * List content of a given directory.
- * 
+ *
  * Returns: a GDataInputStream to process with videoob_read_finish
  */
 GDataInputStream *
@@ -260,7 +260,7 @@ videoob_ls (const gchar *backend,
 {
   const gchar *args[64];
   int i = 0;
-  
+
   GRL_DEBUG ("%s ( %s, %d, %s )",
              __FUNCTION__,
              backend,
@@ -268,7 +268,7 @@ videoob_ls (const gchar *backend,
              dir);
 
   args[i++] = "ls";
-  
+
   if (NULL != dir)
     args[i++] = dir;
 
@@ -285,9 +285,9 @@ videoob_ls (const gchar *backend,
  * @count: number of result expected
  * @pattern: pattern to search for
  * @error:
- * 
+ *
  * Search for video matching a given pattern.
- * 
+ *
  * Returns: a GDataInputStream to process with videoob_read_finish
  */
 GDataInputStream *
@@ -298,13 +298,13 @@ videoob_search (const gchar *backend,
 {
   const gchar *args[64];
   int i = 0;
-  
+
   GRL_DEBUG ("%s ( %s, %d, %s )",
              __FUNCTION__,
              backend,
              count,
              pattern);
-  
+
   args[i++] = "search";
   args[i++] = pattern;
 
@@ -319,9 +319,9 @@ videoob_search (const gchar *backend,
  * @backend: selected backend
  * @uri: uri of the media
  * @error:
- * 
+ *
  * Fetch informations about given media.
- * 
+ *
  * Returns: a GDataInputStream to process with videoob_read_finish
  */
 GDataInputStream *
@@ -331,14 +331,14 @@ videoob_info (const gchar *backend,
 {
   const gchar *args[64];
   int i = 0;
-  
+
   GRL_DEBUG ("%s ( %s, %s )",
              __FUNCTION__,
              backend,
              uri);
-  
+
   args[i++] = "info";
-  
+
   args[i++] = uri;
 
   /* End of args */
@@ -350,9 +350,9 @@ videoob_info (const gchar *backend,
 /**
  * videoob_backends:
  * @error:
- * 
+ *
  * List of backends.
- * 
+ *
  * Returns: list of backends as strings: newly allocated and NULL-terminated.
  */
 gchar **

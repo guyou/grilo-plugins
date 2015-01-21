@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef _VIDEOOB_SOURCE_H_
-#define _VIDEOOB_SOURCE_H_
+#ifndef _VIDEOOB_H_
+#define _VIDEOOB_H_
 
 #include <gio/gio.h>
 
@@ -35,4 +35,4 @@ GList *videoob_read_finish (GDataInputStream *dis,
                             GAsyncResult *res,
                             GError **error);
 
-#endif /* _GRL_VIDEOOB_SOURCE_H_ */
+#endif /* _VIDEOOB_H_ */

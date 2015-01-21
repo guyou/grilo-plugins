@@ -30,28 +30,6 @@
 #include <../../src/weboob/videoob.h>
 
 static void
-test_ls (void)
-{
-  GList *medias;
-  GError *error;
-  error = NULL;
-
-  medias = videoob_ls (NULL, -1, "arte-latest", &error);
-  printf ("ls: %d\n", g_list_length (medias));
-
-  medias = videoob_ls (NULL, 5, "latest", &error);
-  printf ("ls: %d\n", g_list_length (medias));
-
-  medias = videoob_ls (NULL, 5, NULL, &error);
-  printf ("ls: %d\n", g_list_length (medias));
-
-  if (error != NULL)
-  {
-    g_error("ls failed: %s", error->message);
-  }
-}
-
-static void
 test_backends (void)
 {
   gchar **backends;
@@ -68,6 +46,5 @@ test_backends (void)
 int
 main (int argc, char **argv)
 {
-  /* test_ls (); */
   test_backends ();
 }

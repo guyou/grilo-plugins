@@ -23,30 +23,30 @@
 
 #include <grilo.h>
 
-#define GRL_WEBOOB_SOURCE_TYPE                 \
+#define GRL_WEBOOB_SOURCE_TYPE    \
   (grl_weboob_source_get_type ())
 
 #define GRL_WEBOOB_SOURCE(obj)                         \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj),                   \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj),                  \
                                GRL_WEBOOB_SOURCE_TYPE, \
                                GrlWeboobSource))
 
-#define GRL_IS_WEBOOB_SOURCE(obj)                              \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj),                           \
+#define GRL_IS_WEBOOB_SOURCE(obj)                       \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj),                   \
                                GRL_WEBOOB_SOURCE_TYPE))
 
-#define GRL_WEBOOB_SOURCE_CLASS(klass)                 \
-  (G_TYPE_CHECK_CLASS_CAST((klass),                     \
-                           GRL_WEBOOB_SOURCE_TYPE,     \
+#define GRL_WEBOOB_SOURCE_CLASS(klass)             \
+  (G_TYPE_CHECK_CLASS_CAST((klass),                \
+                           GRL_WEBOOB_SOURCE_TYPE, \
                            GrlWeboobSourceClass))
 
-#define GRL_IS_WEBOOB_SOURCE_CLASS(klass)              \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),                     \
+#define GRL_IS_WEBOOB_SOURCE_CLASS(klass)           \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),                 \
                            GRL_WEBOOB_SOURCE_TYPE))
 
-#define GRL_WEBOOB_SOURCE_GET_CLASS(obj)               \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj),                    \
-                              GRL_WEBOOB_SOURCE_TYPE,  \
+#define GRL_WEBOOB_SOURCE_GET_CLASS(obj)              \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj),                  \
+                              GRL_WEBOOB_SOURCE_TYPE, \
                               GrlWeboobSourceClass))
 
 typedef struct _GrlWeboobSource GrlWeboobSource;

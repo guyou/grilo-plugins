@@ -52,23 +52,17 @@ test_ls (void)
 }
 
 static void
-dump_backend (gpointer data,
-              gpointer user_data)
-{
-  gchar **backend = (gchar**) data;
-  printf ("Backend: %s - %s\n", backend[0], backend[1]);
-}
-
-static void
 test_backends (void)
 {
-  GList *backends;
+  gchar **backends;
+  gchar **backend;
   GError *error;
   error = NULL;
 
   backends = videoob_backends (&error);
-  printf ("%d backends\n", g_list_length (backends));
-  g_list_foreach (backends, dump_backend, NULL);
+  for (backend = backends ; *backend != NULL ; backend++) {
+    printf ("Backend: %s\n", *backend);
+  }
 }
 
 int
